@@ -10,16 +10,12 @@ public class EndingViewer : MonoBehaviour
     [Header("Objects")]
     public GameObject endingText;
 
+    [Space]
     public GameObject logoText;
     public GameObject developerText;
 
     [Header("Button")] public Button goToMain;
-
-    // [Header("Handlers")] 
-    // public float showTerm = 7f;
-    // public float resetTerm = 5f;
-    // public float hideTerm = 0.5f;
-
+    
     [Header("Text")] 
     public List<string> endingList_ENG = new List<string>();
     public List<string> endingList_KOR = new List<string>();
@@ -47,7 +43,6 @@ public class EndingViewer : MonoBehaviour
     private IEnumerator ShowTextCoroutine()
     {
         int idx = 0;
-
         int leng = 0;
         
         if (GameManager.SelectedLanguage == AvailableLanguage.English)
@@ -63,7 +58,6 @@ public class EndingViewer : MonoBehaviour
         
         while (true)
         {
-            
             ShowText(idx);
             yield return new WaitForSeconds(5.5f);
             idx++;
@@ -132,13 +126,5 @@ public class EndingViewer : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         logoText.GetComponent<Animator>().SetBool("visible",true);
         developerText.GetComponent<Animator>().SetBool("visible",true);
-        // yield return new WaitForSeconds(5);
-        // logoText.GetComponent<Animator>().SetBool("visible",false);
-        // yield return new WaitForSeconds(2);
-        //
-        // logoText.GetComponent<TMP_Text>().SetText("The End");
-        // yield return new WaitForSeconds(0.5f);
-        // logoText.GetComponent<Animator>().SetBool("visible",true);
     }
-
 }
