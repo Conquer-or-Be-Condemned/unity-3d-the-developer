@@ -19,8 +19,7 @@ public enum AvailableLanguage
 
 public class GameManager : Singleton<GameManager>
 {
-    [Header("Management")] 
-    
+    // [Header("Management")] 
     //  Load Game이 없어졌므로 삭제한다.
     // public static bool IsNewGame;
     
@@ -38,13 +37,16 @@ public class GameManager : Singleton<GameManager>
     //  인게임에서 필요한 모든 초기화가 가능한지 확인(true : 초기화 안됨, false : 초기화 됨)
     public static bool InGameInit;
     
+    [Space]
     [Header("Loading")]
     //  로딩을 스킵할 수 있는지 확인
     public static bool LoadingSkip;
 
-    [Header("Language")] public static AvailableLanguage SelectedLanguage = 0;
+    [Space]
+    [Header("Language")] public static AvailableLanguage SelectedLanguage = AvailableLanguage.English;
 
-    [Header("Notice")] public static bool ReadNotice = false;    
+    [Space]
+    [Header("Notice")] public static bool ReadNotice = false;
 
     private void Start()
     {
@@ -81,7 +83,6 @@ public class GameManager : Singleton<GameManager>
         //  인게임인지 확인
         if (InGame)
         {
-
             //  플레이어 재검색 (혹시 모를 오류 대비)
             if (player == null)
             {

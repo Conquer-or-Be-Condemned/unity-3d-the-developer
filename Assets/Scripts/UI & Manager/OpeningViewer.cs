@@ -9,17 +9,21 @@ using Button = UnityEngine.UI.Button;
 
 public class OpeningViewer : MonoBehaviour
 {
-    [Header("Talk UIs")] public GameObject talkWrapper;
+    [Header("Talk UIs")] 
+    public GameObject talkWrapper;
     public TMP_Text talkText;
 
-    [Header("Handlers")] private int curSceneId = 0;
+    [Header("Handlers")] 
+    private int curSceneId = 0;
     private int talkIdx;
 
-    [Header("Skip Button")] public GameObject skipButton;
+    [Header("Skip Button")] 
+    public GameObject skipButton;
     
     [Header("Space Ship")]
     public GameObject spaceShip;
     private string _spaceShipHoverId;
+    
     private void Start()
     {
         TalkManager.SetTalkData();

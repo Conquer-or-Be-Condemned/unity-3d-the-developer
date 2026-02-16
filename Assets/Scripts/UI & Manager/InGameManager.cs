@@ -18,25 +18,32 @@ using UnityEngine.UI;
 
 public class InGameManager : MonoBehaviour
 {
-    [Header("Status")] public int curWave;
+    [Header("Status")] 
+    public int curWave;
     public int maxWave;
     public int curSceneId;
 
     //  웨이브 중인지 판단하는 변수
-    [Header("Wave")] public bool isWave;
+    [Space]
+    [Header("Wave")] 
+    public bool isWave;
     public bool spawnEnd;
     public bool isClear;
 
     //  Wave 진행 버튼
+    [Space]
     public GameObject waveStart;
     public GameObject startWrapper;
     public GameObject waveStartText;
 
     //  Wave 출력 Text
-    [Header("Wave Info")] public TMP_Text waveInfo;
+    [Space]
+    [Header("Wave Info")] 
+    public TMP_Text waveInfo;
     public GameObject waveWrapper;
 
     //  Wave 몬스터 수
+    [Space]
     public int maxSpawn;
     public int dieSpawn;
     public int curSpawn;
@@ -44,8 +51,10 @@ public class InGameManager : MonoBehaviour
     //  Wave 몬스터 수
     // public int dieBossSpawn;
     // public int curBossSpawn;
+    [Space]
     public bool isBossWave;
 
+    [Space]
     [Header("Talk Management")]
     //  대화창 끝남을 확인
     private bool talkEnd;
@@ -56,10 +65,12 @@ public class InGameManager : MonoBehaviour
     //  현재 대화의 진전도
     private int talkIdx;
 
+    [Space]
     [Header("Talk UIs")] public GameObject talkWrapper;
     public GameObject talkBox;
     public TMP_Text talkText;
 
+    [Space]
     [Header("Pause and Setting")] public GameObject pauseSet;
     public bool pauseVisible;
     public GameObject settings;
@@ -68,9 +79,11 @@ public class InGameManager : MonoBehaviour
     public bool operationKeyVisible;
     public GameObject blind;
 
+    [Space]
     [Header("Pause Buttons")] public GameObject goToStageMenu;
     public GameObject restartButton;
 
+    [Space]
     [Header("Stage Clear")] public GameObject stageClearWrapper;
     public TMP_Text stageClearText;
     public TMP_Text stageContentText;
@@ -80,17 +93,27 @@ public class InGameManager : MonoBehaviour
     public Button clearGoToStageSelect;
     public Button clearRestart;
 
-    [Header("Player")] public GameObject player;
+    [Space]
+    [Header("Player")] 
+    public GameObject player;
     public GameObject playerSpawnPoint;
 
-    [Header("Player Bomb")] public TMP_Text bombCount;
+    [Space]
+    [Header("Player Bomb")] 
+    public TMP_Text bombCount;
     public GameObject bombImage;
 
-    [Header("Monster Spawners")] public MonsterSpawner[] monsterSpawners;
+    [Space]
+    [Header("Monster Spawners")] 
+    public MonsterSpawner[] monsterSpawners;
     
-    [Header("Boss Animation")] public GameObject bossAnimationManager;
+    [Space]
+    [Header("Boss Animation")] 
+    public GameObject bossAnimationManager;
 
-    [Header("Game Over")] public bool isGameOver;
+    [Space]
+    [Header("Game Over")] 
+    public bool isGameOver;
     public float clear;
 
     private void Start()
