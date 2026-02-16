@@ -9,18 +9,21 @@ public class AudioManager : Singleton<AudioManager>
     public AudioMixerGroup bgmMixerGroup; // BGM Mixer Group
     public AudioMixerGroup sfxMixerGroup; // SFX Mixer Group
     
+    [Space]
     [Header("BGM")]
     public AudioClip[] bgmClips;
     public float bgmVolume;
     private AudioSource[] _bgmPlayers;
     private int _bgmChannelIndex;
 
+    [Space]
     [Header("SFX")]
     public AudioClip[] sfxClips;
     public float sfxVolume;
     private AudioSource[] _sfxPlayers;
     private Dictionary<string, AudioSource> _activeSfx = new Dictionary<string, AudioSource>();
 
+    [Space]
     private GameObject _sfxObject;
     private GameObject _bgmObject;
     public enum Bgm

@@ -18,8 +18,9 @@ public class GeneralManager : Singleton<GeneralManager>
     public CursorManager cursorManager;
     public AudioManager audioManager;
     public SettingManager settingManager;
-
+    
     //  InGame Managers (Local)
+    [Space]
     [Header("In Game Manager")]
     public CameraController cameraController;
     public MiniMapController minimapController;
@@ -28,15 +29,18 @@ public class GeneralManager : Singleton<GeneralManager>
     public InGameManager inGameManager;
     
     //  Shop Manager (Local)
+    [Space]
     [Header("Shop Manager")]
     public ShopManager shopManager;
     
     //  UI Managements
+    [Space]
     [Header("UI Managements")]
     public UICUInfo uiCUInfo;
     public UIPlayerHp uiPlayerHp;
     
     //  부가기능 Managers (Local)
+    [Space]
     [Header("Local Manager")]
     public LoadingManager loadingManager;
     public SiteManager siteManager;
@@ -46,7 +50,6 @@ public class GeneralManager : Singleton<GeneralManager>
     //  Global Manager들은 프로그램 시작과 함께 할당
     private void Start()
     {
-        
         //  GM과 SC는 GetComponent로 할당해도 무방
         gameManager = GameManager.Instance;
         sceneController = SceneController.Instance;

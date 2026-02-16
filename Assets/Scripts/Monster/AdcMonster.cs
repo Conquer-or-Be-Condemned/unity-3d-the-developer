@@ -53,7 +53,7 @@ public class AdcMonster : Monster
 
     private void Update()
     {
-        if (player == null || controlUnitStatus == null) return;
+        if (player|| controlUnitStatus) return;
 
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
 

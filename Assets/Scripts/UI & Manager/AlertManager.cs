@@ -11,15 +11,17 @@ using UnityEngine;
 
 public class AlertManager : MonoBehaviour
 {
+    [Header("UI")]
     [SerializeField] private GameObject alertBox;
     [SerializeField] private TMP_Text alertInfo;
 
     public Animator alertAnimator;
 
-    private WaitForSeconds _UIDelay1 = new WaitForSeconds(2.0f);
-    private WaitForSeconds _UIDelay2 = new WaitForSeconds(2.0f);
+    private readonly WaitForSeconds _UIDelay1 = new WaitForSeconds(2.0f);
+    private readonly WaitForSeconds _UIDelay2 = new WaitForSeconds(2.0f);
 
-    //  Alert Text 배열입니다. 사용에 주의하세요.
+    [Space]
+    [Tooltip("Alert Text 배열입니다. 사용에 주의하세요.")]
     public List<string> alertTexts = new List<string>();
 
     //  게임 내에서만 실행 됨

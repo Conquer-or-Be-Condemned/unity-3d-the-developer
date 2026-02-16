@@ -15,7 +15,7 @@ public class SceneController : Singleton<SceneController>
 {
     
     //  딜레이가 필요한 경우를 위한 변수
-    private float delay = 3f;
+    private const float delay = 3f;
 
     //  현재 씬 정보
     public static string NowScene;

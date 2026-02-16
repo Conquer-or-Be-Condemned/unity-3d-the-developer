@@ -4,11 +4,14 @@ using UnityEngine;
 
 public class CameraOutlineController : MonoBehaviour
 {
+    [Header("Cameras")]
     public Camera mainCamera; // 메인 카메라
     public Camera minimapCamera; // 미니맵 카메라
 
+    [Space]
+    [Header("Outlines")]
     public Color outlineColor; // 외곽선 색상
-    public float outlineWidth = 0.1f; // 외곽선 두께
+    public const float outlineWidth = 0.1f; // 외곽선 두께
 
     private LineRenderer lineRenderer; // 외곽선을 그리는 LineRenderer
 
@@ -34,9 +37,12 @@ public class CameraOutlineController : MonoBehaviour
         lineRenderer.useWorldSpace = true;
         lineRenderer.startWidth = outlineWidth;
         lineRenderer.endWidth = outlineWidth;
+        
         lineRenderer.loop = true;
+        
         lineRenderer.startColor = outlineColor;
         lineRenderer.endColor = outlineColor;
+        
         lineRenderer.sortingLayerName = "MiniMap"; // 또는 원하는 Sorting Layer 이름
         lineRenderer.sortingOrder = 10;           // 레이어 순서를 높게 설정 (다른 오브젝트 위로)
         lineRenderer.material = new Material(Shader.Find("Sprites/Default"));

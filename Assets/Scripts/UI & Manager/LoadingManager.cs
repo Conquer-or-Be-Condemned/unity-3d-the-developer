@@ -13,6 +13,7 @@ using Random = UnityEngine.Random;
  */
 public class LoadingManager : MonoBehaviour
 {
+    [Header("UI")]
     //  스킵 버튼
     public GameObject skip;
     //  로딩 애니메이션 이미지
@@ -20,6 +21,8 @@ public class LoadingManager : MonoBehaviour
     //  Tip Text
     public TMP_Text tips;
 
+    [Space]
+    [Header("Tip List")]
     //  Tip List
     public List<string> tipList_ENG = new List<string>();
     public List<string> tipList_KOR = new List<string>();

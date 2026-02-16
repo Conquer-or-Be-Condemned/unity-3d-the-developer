@@ -12,6 +12,7 @@ using UnityEngine.UI;
  */
 public class MiniMapController : MonoBehaviour
 {
+    [Header("Handler")]
     public bool isVisible;
     
     [SerializeField] private GameObject mapInvisible;
@@ -21,7 +22,6 @@ public class MiniMapController : MonoBehaviour
     private Animator _animator;
     private void Awake()
     {
-        
         if (mapVisible == null || mapInvisible == null)
         {
             // Debug.LogError("Error : MiniMap Script에 버튼을 추가해주세요.");

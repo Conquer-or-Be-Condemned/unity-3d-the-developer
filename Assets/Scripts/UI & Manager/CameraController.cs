@@ -15,6 +15,7 @@ public class CameraController : MonoBehaviour
     public GameObject target;
     public Tilemap map;
 
+    [Tooltip("Default : 0.125f")]
     [SerializeField] private float smoothSpeed = 0.125f;
 
     private float _cameraHalfHeight;
@@ -43,7 +44,6 @@ public class CameraController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        
         if (GeneralManager.Instance.inGameManager.isWave)
         {
             // 흔들림 중이 아니면 카메라 이동
