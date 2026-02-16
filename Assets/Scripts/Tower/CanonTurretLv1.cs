@@ -58,8 +58,8 @@ public class CanonTurretLv1 : DefaultCanonTurret
         animator.enabled = true; // 발사할 때 애니메이션 시작
         GameObject bulletObj = Instantiate(bulletPrefab, bulletSpawnPoint.position, Quaternion.identity);
         TowerBullet towerBulletScript = bulletObj.GetComponent<TowerBullet>();
-        float randomValue = Random.Range(-0.5f, 0.5f);
-        bulletFirePoint.position = new Vector3(bulletFirePoint.position.x+randomValue, bulletFirePoint.position.y,0f);
+        float randomX = bulletFirePoint.position.x + Random.Range(-0.5f, 0.5f);
+        bulletFirePoint.position = new Vector3(randomX, bulletFirePoint.position.y,0f);
         towerBulletScript.SetTarget(bulletFirePoint);   
         // Collider2D player = Physics2D.OverlapCircle(transform.position, 40, playerMask);
         // Debug.Log(player);

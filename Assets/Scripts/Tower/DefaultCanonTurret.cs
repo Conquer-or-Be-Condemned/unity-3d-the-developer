@@ -90,7 +90,7 @@ public abstract class DefaultCanonTurret : MonoBehaviour, IActivateTower
 
     private void NoTargetInRange()//적이 타워 범위에 없을 때 탐색(TowerIsActivatedNow에서 수행)
     {
-        if (Target==null)
+        if (Target is null)
         {
             _fireTime -= Time.deltaTime;
             if(_fireTime <= 0f) _fireTime = 0f;
@@ -100,7 +100,7 @@ public abstract class DefaultCanonTurret : MonoBehaviour, IActivateTower
     }
     private void RotateTowardsTarget()//적향해 타워 z축 회전(TowerIsActivatedNow에서 수행)
     {
-        if (Target != null)
+        if (Target is not null) //
         {
             float angle =
                 Mathf.Atan2(Target.position.y - turret.position.y, Target.position.x - turret.position.x) *
@@ -112,7 +112,7 @@ public abstract class DefaultCanonTurret : MonoBehaviour, IActivateTower
     }
     private void FireRateController()//총알 객체화 후 발사 동작 수행(TowerIsActivatedNow에서 수행)
     {
-        if (!CheckTargetIsInRange())//적이 범위에 없음
+        if (CheckTargetIsInRange())//적이 범위에 없음
         {
             _fireTime -= Time.deltaTime;
             if(_fireTime <= 0f) _fireTime = 0f;
@@ -175,7 +175,7 @@ public abstract class DefaultCanonTurret : MonoBehaviour, IActivateTower
 
         foreach (var monster in availableTargets)
         {
-            if (Target == null)
+            if (Target is null)
             {
                 Target = monster.collider.transform;
             }
@@ -184,12 +184,12 @@ public abstract class DefaultCanonTurret : MonoBehaviour, IActivateTower
     }
     private bool CheckTargetIsInRange()//적이 사거리에 있는지 확인(FireRateController에서 수행)
     {
-        if (Target==null) return false;
+        if (Target is null) return false;
         return Vector2.Distance(Target.position, turret.position) <= Range;
     }
     private bool IsTargetInSight()//적이 시야각에 있는지 확인(FireRateController, OverHeatAnimationController에서 수행)
     {
-        if (Target==null) return false;
+        if (Target is null) return false;
         float angleToTarget = Mathf.Atan2(Target.position.y - turret.position.y, Target.position.x - turret.position.x) * Mathf.Rad2Deg - 90f;
         float turretAngle = TurretRotationPoint.eulerAngles.z;
         float angleDifference = Mathf.DeltaAngle(turretAngle, angleToTarget);
@@ -227,7 +227,7 @@ public abstract class DefaultCanonTurret : MonoBehaviour, IActivateTower
     {
         // yield return new WaitForSeconds(0.2f);
         Collider2D player = Physics2D.OverlapCircle(turret.position, 50, playerMask);
-        if(player!=null)
+        if(player is not null)
         {
             float distance = Vector2.Distance(turret.position, player.transform.position);
             AudioManager.Instance.PlaySfx(AudioManager.Sfx.Fire, distance, 50);
@@ -285,5 +285,5 @@ public abstract class DefaultCanonTurret : MonoBehaviour, IActivateTower
     {
         return Damage;
     }
-    //  TODO : Rpm과 데미지 정보를 만들어야 함.
+    
 }
