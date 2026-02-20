@@ -14,23 +14,23 @@ using Button = UnityEngine.UI.Button;
 public class SceneController : Singleton<SceneController>
 {
     
+    [Header("Constants")]
     //  딜레이가 필요한 경우를 위한 변수
     private const float delay = 3f;
 
+    [Space]
+    
+    [Header("Scene Info.")]
     //  현재 씬 정보
     public static string NowScene;
-    
     //  로딩 씬 같은 경우 다음 씬을 알아야 이동할 수 있음
     public static string NextScene;
-    
-    //  스테이지 정보
+    //  스테이지 정보 (일부러 Enum 안 씀)
     public static string[] stageList = { "Stage_1", "Stage_2", "Stage_3", "Ending" };
-    
-    // 보스 테스트
-    // public static string[] stageList = { "Stage_Boss", "Stage_2" };
 
+    
     //  게임 시작 여부
-    private bool isStart;
+    private bool _isStart;
 
     [Header("Stage")]
     public int curSelectStage;
@@ -40,12 +40,11 @@ public class SceneController : Singleton<SceneController>
         //  Main 씬이 담기게 됨.
         NowScene = SceneManager.GetActiveScene().name;
         // AudioManager.Instance.PlayBGM(AudioManager.Bgm.StartingScene,true);
-        isStart = false;
+        _isStart = false;
     }
 
     public void FixedUpdate()
     {
-
         if (NowScene == null)
         {
             NowScene = SceneManager.GetActiveScene().name;
@@ -54,12 +53,6 @@ public class SceneController : Singleton<SceneController>
                 StageInfoManager.StageInit = false;
             }
         }
-
-        // if (NowScene == "GameOver")
-        // {
-        //     GameObject.Find("ExitProgram").GetComponent<Button>().onClick.AddListener(ExitProgram);
-        // }
-        
     }
 
     #region ForEnterGame
@@ -68,7 +61,7 @@ public class SceneController : Singleton<SceneController>
     public void GoToGame()
     {
         AudioManager.Instance.StopAllSfx();
-        if (!isStart)
+        if (!_isStart)
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
@@ -81,7 +74,7 @@ public class SceneController : Singleton<SceneController>
                 curSelectStage = GeneralManager.Instance.stageSelectManager.GetCurSelectStage();    
             }
             
-            isStart = true;
+            _isStart = true;
             StartCoroutine(PreGoToGameCoroutine());
         }
     }
@@ -93,7 +86,7 @@ public class SceneController : Singleton<SceneController>
         
         Time.timeScale = 1f;
         // Debug.Log("Restart!");
-        isStart = false;
+        _isStart = false;
 
         GameManager.InGame = false;
         GameManager.InGameInit = false;
@@ -109,6 +102,7 @@ public class SceneController : Singleton<SceneController>
             GeneralManager.Instance.stageInfoManager.SetStageMenuHide();
             yield return new WaitForSeconds(1.1f);
         }
+        
         ChangeScene("Loading");
         StartCoroutine(GoToGameCoroutine());
     }
@@ -116,7 +110,7 @@ public class SceneController : Singleton<SceneController>
     //  로딩 창이 시작되고 나서 스테이지를 바꿈
     private IEnumerator GoToGameCoroutine()
     {
-        isStart = false;
+        _isStart = false;
         
         yield return new WaitForSeconds(2.8f);
 
