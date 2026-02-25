@@ -8,15 +8,23 @@ using UnityEngine.UI;
 
 public class SettingManager : MonoBehaviour
 {
-    [Header("Audio Manager")] public AudioManager audioManager;
+    [Header("Audio Manager")] 
+    public AudioManager audioManager;
 
+    
+    [Space]
     [Header("Sliders")] 
     public Slider bgmSlider;
     public Slider sfxSlider;
 
-    [Header("DropBox")] public TMP_Dropdown languageSetting;
+    [Space]
+    [Header("DropBox")] 
+    public TMP_Dropdown languageSetting;
     
-    [Header("Handler")] public bool isEnable;
+    [Space]
+    [Header("Flags")] 
+    public bool isEnable;
+    
     private void Start()
     {
         isEnable = false;

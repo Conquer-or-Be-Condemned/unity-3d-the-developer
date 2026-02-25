@@ -32,7 +32,9 @@ public class ShopManager : MonoBehaviour
     [Header("Handle")] private int curMode;
 
     [Space]
-    [Header("Alert")] public GameObject alertBox;
+    [Header("Alert")] 
+    public GameObject alertBox;
+    public Animator alertBoxAnimator;
     public TMP_Text alertText;
     
     private int curAlert;
@@ -67,6 +69,16 @@ public class ShopManager : MonoBehaviour
         
         ValidateUpgradeButtons();
     }
+
+    private void Start()
+    {
+        if (alertBox)
+        {
+            alertBoxAnimator = alertBox.GetComponent<Animator>();
+        }
+        
+    }
+    
 
     private void FixedUpdate()
     {
@@ -194,13 +206,13 @@ public class ShopManager : MonoBehaviour
 
     private IEnumerator AlertCoroutine()
     {
-        alertBox.GetComponent<Animator>().SetBool("visible", true);
+        alertBoxAnimator.SetBool("visible", true);
         yield return new WaitForSeconds(1.2f);
         HideAlert();
     }
 
     public void HideAlert()
     {
-        alertBox.GetComponent<Animator>().SetBool("visible", false);
+        alertBoxAnimator.SetBool("visible", false);
     }
 }

@@ -10,7 +10,7 @@ public class SiteManager : MonoBehaviour
 {
     public static void OpenGithub()
     {
-        Application.OpenURL("https://github.com/Conquer-or-Be-Condemned/CBC");
+        Application.OpenURL("https://store.steampowered.com/app/4336820/The_Developer/?beta=0");
     }
 
     public static void OpenAnySite(string url)
