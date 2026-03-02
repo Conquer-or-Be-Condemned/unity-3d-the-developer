@@ -19,7 +19,7 @@ public class UICUPowerHandler : MonoBehaviour, IPointerEnterHandler, IPointerExi
     {
         uiInfoWrapper.SetActive(false);
         cuInfo = GameObject.Find("ControlUnit").GetComponent<ControlUnitStatus>();
-        canvas = GameObject.Find("Canvas").GetComponent<Canvas>();
+        canvas = GameObject.Find("HUD").GetComponent<Canvas>();
         canvasSize = canvas.GetComponentInParent<RectTransform>().sizeDelta;
 
         isHover = false;
