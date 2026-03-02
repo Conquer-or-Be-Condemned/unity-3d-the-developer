@@ -22,7 +22,7 @@ public class UICUHpHandler : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
         // ControlUnit과 Canvas 참조
         cuInfo = GameObject.Find("ControlUnit").GetComponent<ControlUnitStatus>();
-        canvas = GameObject.Find("Canvas").GetComponent<Canvas>();
+        canvas = GameObject.Find("HUD").GetComponent<Canvas>();
         canvasSize = canvas.GetComponentInParent<RectTransform>().sizeDelta;
 
         isHover = false;

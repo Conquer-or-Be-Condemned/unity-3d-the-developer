@@ -21,7 +21,6 @@ public class TowerManager : MonoBehaviour
 {
     [Header("Tower Info")]
     //  혹시 모를 관리의 용이성을 위해 배열로 하지 않고 List로 구현
-    [SerializeField]
     public static List<GameObject> towerList = new List<GameObject>();
 
     [SerializeField] private string towerTag = "Tower";
