@@ -134,6 +134,7 @@ public abstract class DefaultLaserTurret : MonoBehaviour, IActivateTower
             if (_timeTilFire >= (1f / FireRate) && IsTargetInSight())//적이 타워의 시야각에 있고 RPS만큼 발사
             {
                 FireSound();
+                Debug.Log("LaserTurret Shoot");
                 Shoot();
                 _timeTilFire = 0f;
 
