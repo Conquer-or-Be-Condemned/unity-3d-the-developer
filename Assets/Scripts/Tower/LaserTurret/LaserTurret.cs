@@ -64,11 +64,14 @@ public class LaserTurret : DefaultLaserTurret
     protected void Shoot()//총알 객체화 후 목표로 발사(FireRateController에서 수행)
     {
         animator.enabled = true; // 발사할 때 애니메이션 시작
-        
-        
-        if(!_nowShooting)
+
+
+        if (!_nowShooting)
+        {
+            Debug.Log("shooting started");
             StartCoroutine(AnimateLaserScale(laserPrefab));
-        
+        }
+
         // GameObject bulletObj = Instantiate(laserPrefab, laserSpawnPoint.position, Quaternion.identity);
         // TowerBullet towerBulletScript = bulletObj.GetComponent<TowerBullet>();
         // // float randomX = bulletFirePoint.position.x + Random.Range(-0.5f, 0.5f);
