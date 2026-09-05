@@ -6,7 +6,7 @@
 ### [The Developer]
 
 ### [Engine Used]  
-Unity 2D
+Unity 6000.3.23f1
 
 ### [Production]  
 Development Start | 2024-09-27  
