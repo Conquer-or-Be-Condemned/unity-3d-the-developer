@@ -69,7 +69,7 @@ public class AudioManager : Singleton<AudioManager>
         WitchLaughing
     }
     
-    void Awake()
+    public override void Awake()
     {
         base.Awake();
         _bgmChannelIndex = bgmClips.Length;

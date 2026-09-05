@@ -5,7 +5,7 @@ public class Treant : Monster
     private Animator animator;
     private SpriteRenderer spriteRenderer;
     private float attackTimer = 0f;
-    private float attackCooldown = 1f;
+    private new float attackCooldown = 1f;
     private bool isAttacking = false;
     private bool isMoving = false;
     private float debugTimer = 0f;

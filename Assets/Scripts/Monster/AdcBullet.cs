@@ -29,7 +29,7 @@ public class AdcBullet : MonoBehaviour
         if (direction == Vector2.zero) return;
 
         // Rigidbody2D의 속도를 방향과 속도에 맞게 설정
-        rb.velocity = direction * bulletSpeed;
+        rb.linearVelocity = direction * bulletSpeed;
 
         // 총알의 회전 설정 (방향 벡터 기준)
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;

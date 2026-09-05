@@ -11,7 +11,7 @@ public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
         {
             if (_instance == null)
             {
-                _instance = (T)FindObjectOfType(typeof(T));
+                _instance = FindFirstObjectByType<T>();
                 if (_instance == null)
                 {
                     SetUpInstance();
@@ -30,7 +30,7 @@ public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
 
     private static void SetUpInstance()
     {
-        _instance = (T)FindObjectOfType(typeof(T));
+        _instance = FindFirstObjectByType<T>();
 
         if (_instance == null)
         {
