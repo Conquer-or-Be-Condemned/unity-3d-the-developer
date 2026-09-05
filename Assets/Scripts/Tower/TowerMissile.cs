@@ -42,7 +42,7 @@ public class TowerMissile : MonoBehaviour
         _target = target;
         _initialDirection = transform.up;
         _currentSpeed = initialSpeed;
-        rb.velocity = _initialDirection * _currentSpeed;
+        rb.linearVelocity = _initialDirection * _currentSpeed;
 
         // MissileFlying SFX 재생 및 ID 저장
         Collider2D hits = Physics2D.OverlapCircle(transform.position, 80, layerMask);
@@ -87,7 +87,7 @@ public class TowerMissile : MonoBehaviour
         if (!_isHoming || !_target) return;
         // 현재 진행 방향과 목표 방향 사이의 각도 계산
         Vector2 directionToTarget = ((Vector2)_target.position - rb.position).normalized;
-        Vector2 currentDirection = rb.velocity.normalized;
+        Vector2 currentDirection = rb.linearVelocity.normalized;
         
         // 회전 방향 결정 (양수: 시계방향, 음수: 반시계방향)
         float angleToTarget = Vector2.SignedAngle(currentDirection, directionToTarget);
@@ -102,10 +102,10 @@ public class TowerMissile : MonoBehaviour
         _currentSpeed = Mathf.MoveTowards(_currentSpeed, maxSpeed, acceleration * Time.fixedDeltaTime);
         
         // 새로운 속도 적용
-        rb.velocity = newDirection * _currentSpeed;
+        rb.linearVelocity = newDirection * _currentSpeed;
         
         // 미사일 스프라이트 회전
-        float angle = Mathf.Atan2(rb.velocity.y, rb.velocity.x) * Mathf.Rad2Deg - 90f;
+        float angle = Mathf.Atan2(rb.linearVelocity.y, rb.linearVelocity.x) * Mathf.Rad2Deg - 90f;
         transform.rotation = Quaternion.Euler(0, 0, angle);
     }
 

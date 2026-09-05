@@ -61,7 +61,7 @@ public class Player : MonoBehaviour
 
         if (map == null)
         {
-            map = FindObjectOfType<Tilemap>();
+            map = FindFirstObjectByType<Tilemap>();
         }
 
         attackAble = true;
