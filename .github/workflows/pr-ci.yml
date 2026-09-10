@@ -2,126 +2,258 @@ name: PR CI
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
+  checks: write
+
+concurrency:
+  group: pr-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  UNITY_VERSION: 6000.3.23f1
 
 jobs:
-  verify:
-    name: Verify project consistency
+  repository-checks:
+    name: Repository checks
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: false   # ✅ submodule(CBC) 문제로 인한 git 128 방지
+          submodules: false
 
-      - name: Validate Unity project structure
-        run: |
-          test -d "Assets" || (echo "Missing Assets/ folder" && exit 1)
-          test -d "Packages" || (echo "Missing Packages/ folder" && exit 1)
-          test -d "ProjectSettings" || (echo "Missing ProjectSettings/ folder" && exit 1)
-          echo "Project folders OK"
-
-      - name: Check missing .meta for changed Assets
+      - name: Validate Unity project and version
         shell: bash
         run: |
-          BASE="origin/${{ github.base_ref }}"
-          git fetch origin ${{ github.base_ref }} --depth=1 || true
+          set -euo pipefail
 
-          CHANGED=$(git diff --name-only "$BASE"...HEAD | tr -d '\r')
-
-          if [[ -z "$CHANGED" ]]; then
-            echo "No changed files."
-            exit 0
-          fi
-
-          FAIL=0
-          echo "Changed files:"
-          echo "$CHANGED"
-
-          while IFS= read -r file; do
-            [[ -z "$file" ]] && continue
-
-            # Assets 아래에서 meta 파일 자체가 아닌 경우만 검사
-            if [[ "$file" == Assets/* && "$file" != *.meta ]]; then
-              # 삭제된 파일은 검사 제외
-              if git cat-file -e HEAD:"$file" 2>/dev/null; then
-                if [[ ! -f "${file}.meta" && ! -f "$file.meta" ]]; then
-                  echo "::error::Missing .meta for: $file"
-                  FAIL=1
-                fi
-              fi
+          for directory in Assets Packages ProjectSettings; do
+            if [[ ! -d "$directory" ]]; then
+              echo "::error::필수 Unity 폴더가 없습니다: $directory/"
+              exit 1
             fi
-          done <<< "$CHANGED"
+          done
 
-          if [[ $FAIL -eq 1 ]]; then
-            echo "Meta check failed."
+          for file in Packages/manifest.json Packages/packages-lock.json ProjectSettings/ProjectVersion.txt ProjectSettings/EditorBuildSettings.asset; do
+            if [[ ! -f "$file" ]]; then
+              echo "::error::필수 Unity 파일이 없습니다: $file"
+              exit 1
+            fi
+          done
+
+          actual_version=$(sed -n 's/^m_EditorVersion: //p' ProjectSettings/ProjectVersion.txt | tr -d '\r')
+          if [[ "$actual_version" != "$UNITY_VERSION" ]]; then
+            echo "::error file=ProjectSettings/ProjectVersion.txt::Unity 버전이 다릅니다. expected=$UNITY_VERSION actual=$actual_version"
             exit 1
           fi
 
-          echo "Meta check OK"
+          grep -q 'm_SerializationMode: 2' ProjectSettings/EditorSettings.asset || {
+            echo "::error file=ProjectSettings/EditorSettings.asset::Asset Serialization Mode를 Force Text로 설정하세요."
+            exit 1
+          }
 
-      - name: Warn on large files (>50MB) (optional)
+          grep -q 'm_Mode: Visible Meta Files' ProjectSettings/VersionControlSettings.asset || {
+            echo "::error file=ProjectSettings/VersionControlSettings.asset::Version Control Mode를 Visible Meta Files로 설정하세요."
+            exit 1
+          }
+
+          echo "Unity project settings OK: $actual_version"
+
+      - name: Validate enabled Build Scenes
         shell: bash
         run: |
-          THRESHOLD=52428800
-          CHANGED=$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD | tr -d '\r')
+          set -euo pipefail
+          fail=0
+          scene_count=0
 
-          while IFS= read -r file; do
-            [[ -z "$file" ]] && continue
-            if [[ -f "$file" ]]; then
-              size=$(wc -c < "$file")
-              if [[ $size -gt $THRESHOLD ]]; then
-                echo "::warning::Large file detected: $file ($size bytes)"
-              fi
+          while IFS= read -r scene; do
+            [[ -z "$scene" ]] && continue
+            scene_count=$((scene_count + 1))
+
+            if [[ ! -f "$scene" ]]; then
+              echo "::error file=ProjectSettings/EditorBuildSettings.asset::Build Settings의 Scene 파일이 없습니다: $scene"
+              fail=1
+            elif [[ ! -f "${scene}.meta" ]]; then
+              echo "::error file=$scene::Build Scene의 .meta 파일이 없습니다: ${scene}.meta"
+              fail=1
+            else
+              echo "Enabled scene: $scene"
             fi
-          done <<< "$CHANGED"
+          done < <(
+            awk '
+              /- enabled: 1/ { enabled = 1; next }
+              enabled && /^[[:space:]]+path:/ {
+                sub(/^[[:space:]]+path:[[:space:]]*/, "")
+                print
+                enabled = 0
+              }
+            ' ProjectSettings/EditorBuildSettings.asset
+          )
 
-      - name: Warn on Update/FixedUpdate hotspots (Unity)
-        shell: bash
-        run: |
-          echo "Checking hotspots inside Update / FixedUpdate (warning only)..."
-          BASE="origin/${{ github.base_ref }}"
-          git fetch origin ${{ github.base_ref }} --depth=1 || true
-
-          # ✅ grep로 확장자 거르지 말고 git diff pathspec 사용(안전)
-          FILES=$(git diff --name-only "$BASE"...HEAD -- '*.cs' | tr -d '\r')
-
-          # 경고 패턴
-          PATTERN="FindObjectOfType|FindAnyObjectByType|FindObjectsOfType|GameObject\.Find|transform\.Find|Camera\.main|GetComponent<|GetComponentInChildren|GetComponentInParent|Instantiate\(|Destroy\(|Debug\.Log|Debug\.LogWarning|Debug\.LogError|\.Select\(|\.Where\(|\.ToList\("
-
-          if [[ -z "$FILES" ]]; then
-            echo "No changed C# files."
-            exit 0
+          if [[ $scene_count -eq 0 ]]; then
+            echo "::error file=ProjectSettings/EditorBuildSettings.asset::활성화된 Build Scene이 없습니다."
+            fail=1
           fi
 
-          while IFS= read -r file; do
-            [[ -z "$file" ]] && continue
-            [[ -f "$file" ]] || continue
+          exit "$fail"
 
-            for fn in Update FixedUpdate; do
-              if grep -nE "^\s*(public|private|protected|internal)?\s*(override\s+)?void\s+$fn\s*\(" "$file" >/dev/null; then
-                start=$(grep -nE "^\s*(public|private|protected|internal)?\s*(override\s+)?void\s+$fn\s*\(" "$file" | head -n1 | cut -d: -f1)
-                end=$((start + 120))
+      - name: Validate all Unity .meta pairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          fail=0
 
-                snippet=$(awk -v s="$start" -v e="$end" 'NR>=s && NR<=e {print NR ":" $0}' "$file")
+          while IFS= read -r -d '' asset; do
+            if [[ ! -f "${asset}.meta" ]]; then
+              echo "::error file=$asset::누락된 .meta 파일: ${asset}.meta"
+              fail=1
+            fi
+          done < <(find Assets -mindepth 1 ! -name '*.meta' -print0)
 
-                # ✅ 핵심 수정: 매치 0건이면 grep=1이지만, warning only이므로 정상 처리
-                matches=$(echo "$snippet" | grep -nE "$PATTERN" || true)
+          while IFS= read -r -d '' meta; do
+            asset="${meta%.meta}"
+            if [[ ! -e "$asset" ]]; then
+              echo "::error file=$meta::대상 Asset이 없는 .meta 파일: $meta"
+              fail=1
+            fi
+          done < <(find Assets -mindepth 1 -name '*.meta' -print0)
 
-                if [[ -n "$matches" ]]; then
-                  while IFS= read -r hit; do
-                    orig_line=$(echo "$hit" | sed -E 's/^[0-9]+:([0-9]+):.*/\1/')
-                    code=$(echo "$hit" | sed -E 's/^[0-9]+:[0-9]+:(.*)/\1/')
-                    echo "::warning file=$file,line=$orig_line::Potential hotspot in $fn -> $code"
-                  done <<< "$matches"
-                fi
-              fi
-            done
-          done <<< "$FILES"
+          if [[ $fail -ne 0 ]]; then
+            echo "Unity .meta validation failed."
+            exit 1
+          fi
 
-          echo "Hotspot warning check completed."
+          echo "All Assets and folders have matching .meta files."
+
+      - name: Reject generated folders and merge conflict markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          fail=0
+
+          generated=$(git ls-files | grep -E '^(Library|Temp|Logs|[Oo]bj|UserSettings|\.vs|\.idea)/' || true)
+          if [[ -n "$generated" ]]; then
+            echo "::error::Unity 또는 IDE 생성 파일이 Git에 포함돼 있습니다."
+            echo "$generated"
+            fail=1
+          fi
+
+          conflicts=$(git grep -n -I -E '^(<<<<<<< |=======|>>>>>>> )' -- Assets Packages ProjectSettings .github Docs README.md || true)
+          if [[ -n "$conflicts" ]]; then
+            echo "::error::해결되지 않은 Merge conflict 표시가 있습니다."
+            echo "$conflicts"
+            fail=1
+          fi
+
+          exit "$fail"
+
+      - name: Warn about large Assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          count=0
+
+          while IFS= read -r -d '' file; do
+            size=$(wc -c < "$file")
+            echo "::warning file=$file::50MB보다 큰 Asset입니다. Git LFS 적용 여부를 확인하세요. ($size bytes)"
+            count=$((count + 1))
+          done < <(find Assets -type f ! -name '*.meta' -size +50M -print0)
+
+          echo "Large Asset warnings: $count"
+
+  unity-validation:
+    name: Unity EditMode test and Windows build
+    needs: repository-checks
+    if: ${{ vars.UNITY_CI_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: true
+          submodules: false
+
+      - name: Check Unity license secrets
+        shell: bash
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=0
+
+          for variable in UNITY_LICENSE UNITY_EMAIL UNITY_PASSWORD; do
+            if [[ -z "${!variable:-}" ]]; then
+              echo "::error::GitHub Actions Secret이 없습니다: $variable"
+              missing=1
+            fi
+          done
+
+          exit "$missing"
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-
+
+      - name: Run Unity EditMode tests and compile
+        id: unity-tests
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: .
+          unityVersion: ${{ env.UNITY_VERSION }}
+          testMode: editmode
+          artifactsPath: artifacts/editmode
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          checkName: Unity EditMode Tests
+
+      - name: Upload Unity test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-editmode-results
+          path: artifacts/editmode
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Build Windows
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: .
+          unityVersion: ${{ env.UNITY_VERSION }}
+          targetPlatform: StandaloneWindows64
+          buildName: TheDeveloper
+          buildsPath: build
+          allowDirtyBuild: true
+
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: TheDeveloper-Windows
+          path: build/StandaloneWindows64
+          if-no-files-found: error
+          retention-days: 7
