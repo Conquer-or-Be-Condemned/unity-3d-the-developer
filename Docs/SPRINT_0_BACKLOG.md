@@ -1,112 +1,77 @@
-# Sprint 0 Backlog — 첫 주 작업 목록
+# Sprint 0 Backlog — M0 Alignment & Baseline
 
-기간: 1주
-목표: `행성 1 핵심 Prototype`을 시작할 수 있도록 프로젝트를 안정화하고 기획을 확정한다.
+기간: 2026-09-14 ~ 2026-09-20, 1주 가안
+목표: M1 New Core Foundation을 시작할 수 있도록 팀 기준, Owner, Build/CI와 입력 자료를 확정한다.
 
-> Sprint 0는 M0를 끝내기 위한 1주 예외 Sprint다. 전체 실행 순서는 [DEVELOPMENT_FLOW.md](DEVELOPMENT_FLOW.md)를 따른다. Sprint 1부터는 2주 단위로 운영한다.
+> Sprint 0는 M0 전용 1주 Sprint다. 완성된 Gameplay를 만드는 주가 아니라, M1 작업이 `Ready`가 되도록 만드는 주다.
 
-## Sprint 목표
+## 1. Sprint Goal
 
-> 팀원이 같은 Game Rule을 이해하고, Build 가능한 프로젝트에서 50%와 75% Map 상태를 구현하기 시작할 수 있다.
+> 모든 팀원이 같은 M1 범위와 A~E 경계를 이해하고, 필수 CI가 성공하는 저장소에서 자신의 첫 Architecture Slice를 시작할 수 있다.
 
-Sprint 종료 시 완성된 게임 화면이 나올 필요는 없다. 결정되지 않은 Core Rules, 깨진 Build, 불분명한 Map Structure를 남기지 않는 것이 목표다.
+## 2. 진행 순서
 
-## 진행 순서
+1. Baseline: `M0-001`, `M0-002`, `M0-003`
+2. 역할별 P0 입력: `M0-A01`, `M0-B01`, `M0-C01`, `M0-D01`, `M0-E01`
+3. 역할별 P1 설계: P0가 검토된 영역부터 병렬 진행
+4. Gate Review: `M0-004`
 
-P0는 전부 중요하지만 한꺼번에 시작하지 않는다.
+C/D Task는 역할 코드가 있어도 실제 담당 또는 임시 Owner가 지정되기 전까지 상태를 `Blocked`로 둔다.
 
-1. **A단계 — 방향과 프로젝트 안정화:** `PL-001`, `TECH-001`, `CI-001`
-2. **B단계 — 병렬 기획:** `MAP-001~002`, `SHIP-001~002`, `TUR-001`, `ENM-001`, `FLOW-001`
-3. **C단계 — 검증:** `BAL-001`, `TEST-001`
-4. **D단계 — 다음 Sprint 준비:** 남은 작업 시간 안에서 필요한 P1 Task만 수행
+## 3. P0 — M0 Gate
 
-A단계가 끝나기 전 Gameplay 기능을 본격 구현하지 않는다. B단계의 결과가 모여야 C단계의 Power Simulation과 Sprint 검토를 진행할 수 있다.
+| ID | Owner | 지원 | 예상 | 선행 | 작업·가치 | 완료 조건 | 증거 |
+| --- | --- | --- | ---: | --- | --- | --- | --- |
+| M0-001 | A · 양현석 | 전체 | 3h | 없음 | Product Plan 0.2와 M0~M5 승인: 서로 다른 범위 해석 방지 | Decision Log·Deferred·Milestone 이름에 팀 이견 반영 | 승인 회의 기록과 Docs PR |
+| M0-002 | A · 양현석 | B, E | 3h | 없음 | Repository Baseline 확인: 깨진 기반 위 개발 방지 | Compile Error 0, Main/Test 진입, 필수 CI 성공 | CI Run, Editor/Build 결과 |
+| M0-003 | A · 양현석 | 전체 | 1h | M0-001 | C/D 실제 담당 또는 임시 Owner 결정 | C/D Task에 이름·가용 시간·종료 시점 기록 | 역할 회의 기록과 Issue |
+| M0-A01 | A · 양현석 | B, E | 6h | M0-001 | M1 Core Backlog와 asmdef 방향 확정 | App/Profile/Content/Match Slice의 Interface·Test·의존성 정의 | Architecture checklist/Issue |
+| M0-B01 | B · 이영빈 | A | 4h | M0-001 | Player/Input/HUD 레거시 행동과 M1 경계 작성 | 입력·피격·HP 표시의 현재 동작, Command/Event, Test Case 기록 | Migration note와 Test 목록 |
+| M0-C01 | C | A, B, E | 6h | M0-003 | Planet/Hub topology와 Expansion 요구사항 작성 | 50/75/100, CU·Spawn·Turret Slot·동선이 한 Graybox에 표시 | Graybox 이미지/Scene과 설명 |
+| M0-D01 | D | A, B, E | 6h | M0-003 | Turret/Power 역할표와 Paper Simulation | 3 Turret 역할·Cost·Counter, 서로 다른 Clear 조합 2개 | 역할표와 계산 Sheet |
+| M0-E01 | E · 조수빈 | A, C, D | 5h | M0-001 | Enemy/Wave 레거시 행동과 M1 최소 AI 범위 작성 | Enemy 1종·Director의 Command/Event, Target, Spawn/Defeat 조건 정의 | Migration note와 AI flow |
+| M0-004 | A · 양현석 | 전체 | 2h | 모든 P0 | M0 Gate Review | 아래 Sprint 통과 기준을 항목별 통과/미통과 판정 | 회의 기록, 다음 Sprint Backlog |
 
-## P0 Tasks
+## 4. P1 — M1 준비
 
-| ID | 영역 | Task | 주 담당 | 지원 | 결과물 | 완료 조건 |
-|---|---|---|---|---|---|---|
-| PL-001 | 공통 | Project 범위 승인 | A | 전체 팀 | 승인된 `PROJECT_PLAN.md` | 팀원이 이견과 수정 요청을 남기고 A가 Version 0.2 승인 |
-| TECH-001 | 공통 | Unity 기반 상태 검증 | E | A | Editor 및 Development Build 결과 | Compile Error 0, Main에서 Stage 1 진입 가능, 정상 종료 가능 |
-| CI-001 | 공통 | CI와 `.meta` 검사 확인 | E | D | 성공한 CI 실행 | 누락 `.meta`, 깨진 참조, Build Error를 PR에서 검출 |
-| MAP-001 | Planet | 행성 1 전체 Map Graybox | A | C | 100% 전체 Map Image 또는 Unity Graybox | CU, 진입로, Turret, Sector 경계, Player 이동 경로 표시 |
-| MAP-002 | Planet | Expansion Stage 정의 | A | C, B | 50/65/75/90/100% Overlay | 단계마다 새 이점 1개와 새 위협 1개가 기록됨 |
-| SHIP-001 | Spaceship | Spaceship Gameplay Flow와 필수 Console 정의 | A | B, C, E | Hub에서 준비·출격·귀환하는 흐름 | Navigation, Engineering, Communications, Launch 기능과 Mission 후 변화 정의 |
-| SHIP-002 | Spaceship | Spaceship Interior Floor Plan | C | A, D, E | 소형 Hub Floor Plan | 필수 Console 위치, Player 동선, 목표 이동 시간 표시 |
-| TUR-001 | Planet | Turret 역할표 작성 | A | D, B | Cannon/Missile/Laser 역할표 | 역할, Power Cost, Range, 강점, 약점, 대응 Monster 정의 |
-| ENM-001 | Planet | Monster 역할표 작성 | A | D, B | Default/Tanker/Assassin 역할표 | 각 Monster에 필요한 대응 방법과 첫 등장 Stage 정의 |
-| BAL-001 | Planet | Power Paper Simulation | A | B, D | 단계별 유효 조합표 | 각 단계에 서로 다른 Clear 가능 조합 2개 이상 |
-| FLOW-001 | 연결 | 10분 Gameplay Flow 작성 | A | B, C, E | 시간대별 Gameplay 흐름 | 준비, Wave, Expansion, Final Defense 예상 시간 존재 |
-| TEST-001 | 공통 | Prototype Playtest 질문 작성 | B | A, 전체 팀 | 질문 5~7개 | 설명 없이 이해도와 전략 변화를 확인할 수 있음 |
+| ID | Owner | 지원 | 예상 | 선행 | 작업·가치 | 완료 조건 | 증거 |
+| --- | --- | --- | ---: | --- | --- | --- | --- |
+| M0-A02 | A · 양현석 | B, C, D, E | 4h | M0-A01 | Minimal Test Scene Integration Plan | Player/CU/Wave/Reward의 생성·종료·Test 순서 명시 | Sequence/Dependency diagram |
+| M0-B02 | B · 이영빈 | A, D | 3h | M0-B01 | Minimal HUD wireframe | Player HP, CU HP/Power, Wave/Result가 한 화면에서 읽힘 | 흑백 Wireframe |
+| M0-C02 | C | A, E | 3h | M0-C01 | Test World authoring 규칙 | Control Unit, Spawn Point, Sector marker와 Scene 담당 범위 정의 | Scene/Prefab ownership note |
+| M0-D02 | D | A, E | 3h | M0-D01 | M1 Cannon/Power 최소 Data | `TurretDefinition/PowerDefinition` 필드와 유효성 규칙 정의 | Data schema 초안 |
+| M0-E02 | E · 조수빈 | A, C, D | 3h | M0-E01 | Enemy/Encounter 최소 Data | `EnemyArchetype`와 Director 최소 필드·성능 목표 정의 | Data schema 초안 |
+| M0-B03 | B · 이영빈 | 전체 | 2h | M0-B01, M0-C01, M0-D01, M0-E01 | M1/M2 Playtest 질문 | 이해도·전략 변화·오류 발견 질문 5~7개 | Test checklist |
+| M0-L01 | A · 양현석 | 전체 | 2h | M0-001 | Third-party Asset inventory 시작 | 기존 음악·주요 Asset의 출처와 상업 사용 상태 기록 | License 표 |
 
-## P1 Tasks
+P1은 P0 완료 가능성을 해치지 않는 범위에서만 수행한다.
 
-| ID | 영역 | Task | 주 담당 | 지원 | 결과물 | 완료 조건 |
-|---|---|---|---|---|---|---|
-| TECH-002 | 공통 | Prototype Scene 분리 | E | A, C | 별도 Test Scene | 기존 Stage 1을 손상시키지 않고 독립 실행 가능 |
-| SHIP-003 | Spaceship | Spaceship Hub Graybox Scene | C | D, E | 이동 가능한 소형 Hub | 필수 Console 사이를 목표 시간 안에 이동 가능 |
-| SHIP-004 | Spaceship | 공통 Console 상호작용 Prototype | D | C, E | 재사용 가능한 Console Interaction | 접근·상호작용·취소·UI 열기 흐름이 동작 |
-| META-001 | 연결 | Mission 왕복 Flow 뼈대 | E | A, C | Hub → Planet → Result → Hub 연결 | 임시 버튼과 Data를 사용해도 전체 왕복이 중단 없이 동작 |
-| TUR-002 | Planet | Laser 연결 범위 조사 | D | A | 문제 목록 | Selection UI, Power, Damage, Shutdown, Minimap 누락 항목 확인 |
-| DATA-001 | 공통 | Hard-coded Data 목록 작성 | E | D | 이전 대상 목록 | Stage/Wave/Turret/Monster 중 M1에 필요한 항목 식별 |
-| UX-001 | Planet | 최소 Power HUD Wireframe | B | A | 흑백 Wireframe | 최대·사용·남은 Power와 실패 이유를 한 화면에서 확인 |
-| UX-002 | Spaceship | Mission·Upgrade Console Wireframe | B | A, E | 흑백 Wireframe | Mission 정보, 보상, Upgrade 선택 결과를 이해 가능 |
-| PERF-001 | 공통 | 성능 목표 설정 | E | D | Frame Rate 및 개체 수 기준 | Minimum PC, Target FPS, 동시 Monster 수 초안 승인 |
-| LEGAL-001 | 공통 | Third-party Asset 목록화 시작 | A | E | License 표 | 기존 음악 및 주요 Asset의 출처와 사용 가능 여부 기록 |
+## 5. P2 — 여유 시 수행
 
-## Planet 1 Level Design 양식
+| ID | Owner | 지원 | 예상 | 선행 | 작업 | 완료 조건 |
+| --- | --- | --- | ---: | --- | --- | --- |
+| M0-A03 | A · 양현석 | E | 2h | M0-A01 | Architecture Test 자동화 후보 조사 | 금지 의존성·asmdef 검사 후보와 도입 비용 기록 |
+| M0-B04 | B · 이영빈 | A | 2h | M0-B02 | Input/접근성 Risk 정리 | 키보드/패드/마우스 기준과 Blocker 기록 |
+| M0-C03 | C | D, E | 2h | M0-C01 | 환경 기믹 후보 | Gameplay를 바꾸는 후보 3개와 제외 이유 기록 |
+| M0-D03 | D | A | 2h | M0-D01 | Balance 데이터 양식 | 변경값·가설·결과를 비교할 표 작성 |
+| M0-E03 | E · 조수빈 | C, D | 2h | M0-E01 | AI 성능 기준 | Target FPS와 동시 Enemy 수 초안 작성 |
 
-아래 표를 `MAP-002`에서 실제 내용으로 채운다.
+## 6. P3 — Sprint 0에서 하지 않음
 
-| Stage | 개방 Sector | 사용 가능 Turret | Monster 진입로 | 주요 Monster | 새 이점 | 감수할 손해 |
-|---|---|---|---|---|---|---|
-| 1-1 | 50% |  |  |  |  |  |
-| 1-2 | 65% |  |  |  |  |  |
-| 1-3 | 75% |  |  |  |  |  |
-| 1-4 | 90% |  |  |  |  |  |
-| 1-5 | 100% |  |  |  |  |  |
+- 실제 Steamworks/Backend/Netcode 도입
+- 완성된 Spaceship/Planet Scene과 Final Art
+- 3종 Turret·3종 Enemy·Boss 전체 구현
+- Online Co-op, Random Match, SOS, Host Migration
+- Planet 2와 대형 Progression
 
-## Spaceship Hub Design 양식
+## 7. Sprint 0 통과 기준
 
-| 공간 / Console | Player 행동 | 정보 / 선택 | Mission 전후 변화 | 목표 이동 시간 |
-|---|---|---|---|---:|
-| Navigation Console | Mission 선택 | 행성 확장률, 예상 Threat | 새 Sector 표시 | 10초 이내 |
-| Engineering Console | Upgrade 적용 | Power 또는 Turret Upgrade 1개 | 장치와 수치 변화 | 10초 이내 |
-| Communications Console | Log 확인 | 선발대·Story 정보 | 새 Message 표시 | Optional |
-| Launch Point | 행성 이동 | 선택 Mission 확인 | Launch Sequence | 10초 이내 |
+- 모든 P0 Task에 담당자·시간·선행 작업·검증 증거가 있다.
+- C와 D에 실제 담당 또는 M1 임시 Owner가 있다.
+- Compile Error 0, 필수 CI 성공, 진입점 정상 실행이 확인됐다.
+- Product Plan 0.2와 M0~M5, Deferred 범위가 팀에 승인됐다.
+- M1 Core/App/Profile/Content/Match, Player, World, Defense, Enemy Slice가 각각 Ready다.
+- asmdef 의존 방향과 Minimal Test Scene 통합 순서가 승인됐다.
+- P3 작업이 별도 Backlog로 분리됐다.
 
-## Turret 역할표 양식
-
-| Turret | 주 역할 | Power Cost | Range | 강한 상대 | 약한 상황 | 켜야 하는 이유 |
-|---|---|---:|---:|---|---|---|
-| Cannon |  |  |  |  |  |  |
-| Missile |  |  |  |  |  |  |
-| Laser/Railgun |  |  |  |  |  |  |
-
-## Monster 역할표 양식
-
-| Monster | 전투 역할 | Target | 필요한 대응 | 강한 상대 | 약한 상대 | 첫 등장 |
-|---|---|---|---|---|---|---|
-| Default |  |  |  |  |  |  |
-| Tanker |  |  |  |  |  |  |
-| Assassin |  |  |  |  |  |  |
-
-## Prototype Playtest 질문
-
-1. Turret을 켤 수 없을 때 그 이유를 스스로 알았는가?
-2. Wave가 바뀐 뒤 Active Turret Build를 바꾸었는가? 왜 바꾸었는가?
-3. Map Expansion 후 새롭게 가능해진 행동은 무엇이었는가?
-4. Expansion으로 더 어려워진 점은 무엇이었는가?
-5. 이전 Sector의 Turret을 Expansion 후에도 사용했는가?
-6. Player Character가 직접 싸워야 했던 순간이 있었는가?
-7. 항상 켜 두고 싶은 Turret 하나가 있었는가? 있었다면 이유는 무엇인가?
-
-## Sprint 0 통과 기준
-
-- P0 Tasks가 모두 완료됐다.
-- Compile Error와 CI Failure가 없다.
-- 행성 1 전체 Map과 Expansion Boundary가 승인됐다.
-- 소형 Spaceship Hub의 필수 기능과 Player Flow가 승인됐다.
-- Turret과 Enemy의 Role이 수치보다 먼저 정의됐다.
-- 팀원이 다음 Sprint에서 자신이 맡을 Feature와 Task를 알고 있다.
-- M1 Out of Scope가 명시돼 있다.
+하나라도 충족하지 못하면 M1을 시작하지 않고 미통과 P0만 재계획한다.

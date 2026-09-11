@@ -1,7 +1,8 @@
 # Naming and Architecture Conventions
 
 작성일: 2026-09-08
-상태: 팀 코드/문서 명명 규칙 초안 / 로컬 논의용
+수정일: 2026-09-11
+상태: 코드·폴더·계약 명명의 Source of Truth
 
 ## 목적
 
@@ -17,7 +18,7 @@
 | `Domain` | 순수 게임 규칙·상태·값 | .NET BCL만 | `MatchState`, `GameSimulation`, `WaveState` |
 | `Application` | Use Case 조율·세션 흐름·Port | Domain, Contracts | `MatchSession`, `ProfileUseCase` |
 | `Contracts` | 외부 기능의 추상 Port | Domain BCL | `IProfileService`, `IContentCatalog` |
-| `Infrastructure` | 외부 SDK/저장/HTTP의 구현 | Contracts, Domain, Unity/SDK | `SteamPlatformAdapter`, `BinaryProfileRepository` |
+| `Infrastructure` | 외부 SDK/저장/HTTP의 구현 | Contracts, Domain, Unity/SDK | `SteamPlatformAdapter`, `BinaryProfileCache` |
 | `Content` | authoring 정의값과 Runtime 해석 | Domain, Unity authoring API | `StageDefinition`, `ContentCatalog` |
 | `Presentation` | Unity Scene/UI/입력/오디오 표현 | Application, Contracts, Unity | `HudPresenter`, `PlayerSceneAdapter` |
 | `Legacy` | 이전 코드 레퍼런스 | 신규 의존성 금지 | 기존 `UI & Manager` |
@@ -47,7 +48,7 @@
 | `Factory` | 복잡한 객체 생성 | `MatchSessionFactory` | 싱글턴 접근 래퍼 |
 | `Rules` | 모드별 규칙 차이 | `StoryModeRules`, `CoopModeRules` | Unity 화면 로직 |
 | `Authority` | Command 검증/실행 권한 | `LocalAuthority`, `HostAuthority` | 단순 네트워크 연결 |
-| `Agent` | Command를 생성하는 행위자 | `HumanPlayerAgent`, `AllyBotAgent` | HP/인벤토리 상태 |
+| `Agent` | Command를 생성하는 행위자 | `HumanPlayerAgent`, `AllyPlayerAgent` | HP/인벤토리 상태 |
 
 ## 표준 핵심 이름
 
@@ -55,9 +56,8 @@
 AppBootstrap            앱 시작 지점
 AppRoot                 App 스코프 composition root
 AppServices             Bootstrap 내부의 앱 서비스 집합
-GameSession / MatchSession
-                        한 번의 스테이지·던전·협동 매치 수명주기
-MatchState / RunState   해당 매치의 런타임 상태
+MatchSession            한 번의 스테이지·던전·협동 매치 수명주기
+MatchState              해당 매치의 런타임 상태
 GameSimulation          순수 전투·웨이브 상태 전이
 PlayerProfile           계정 진행도
 ContentCatalog          Definition을 검색/해석하는 API
@@ -65,18 +65,34 @@ SceneFlowController     Hub/Lobby/Match 씬 흐름
 HudPresenter             HUD 표시 갱신
 ```
 
-`GameSession`과 `MatchSession`은 둘 다 통용된다. 이 프로젝트에서는 협동/미래 PvP까지
-같은 모델로 표현하므로 `MatchSession`을 기본 이름으로 권장한다. `RunState`는 기존 초안의
-의미가 명확하므로 Domain 내부 세부 상태 이름으로 유지할 수 있다.
+새 코드의 기본 이름은 `MatchSession`과 `MatchState`다. `GameSession`, `StageSession`,
+`RunState`는 레거시 또는 이전 설계 노트에서만 사용하고 새 public 계약에는 추가하지 않는다.
+
+## Assembly reference 방향
+
+아래 화살표는 `참조하는 쪽 → 참조되는 쪽`이다.
+
+```text
+Bootstrap      → Presentation, Infrastructure, Content.Runtime, Core.Application
+Presentation   → Core.Application, Core.Contracts, Core.Domain
+Infrastructure → Core.Contracts, Core.Domain
+Content.Runtime→ Core.Contracts, Core.Domain
+Core.Application → Core.Contracts, Core.Domain
+```
+
+`Core.Domain`과 `Core.Contracts`는 Unity assembly를 참조하지 않는다. Infrastructure와
+Presentation은 서로 직접 참조하지 않고 Bootstrap에서 조립한다.
 
 ## Interface와 구현체
 
 Port는 소비자가 필요한 동작 중심으로 `I` 접두사를 쓴다. 구현체는 구현 기술을 이름에 넣는다.
 
 ```text
-IProfileRepository
-  ├─ BinaryProfileRepository
-  └─ BackendProfileRepository
+IProfileService                 # Application이 사용하는 Profile Use Case
+ProfileService
+  ├─ IBackendGateway            # 최종 권한 원본
+  └─ IProfileCache
+       └─ BinaryProfileCache    # versioned local cache
 
 IPlatformService
   ├─ FakePlatformService
@@ -87,6 +103,9 @@ IAuthority
   ├─ HostAuthority
   └─ DedicatedServerAuthority
 ```
+
+Binary와 Backend를 같은 권한의 대체 Repository로 만들지 않는다. Backend가 최종 Profile을
+확정하고 Local Binary는 cache와 복구 보조만 담당한다.
 
 `IManager`, `IGameService`, `IRepositoryManager`처럼 책임이 넓은 인터페이스는 만들지 않는다.
 

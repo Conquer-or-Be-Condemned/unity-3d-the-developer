@@ -1,7 +1,8 @@
 # System Re-architecture Charter
 
 작성일: 2026-09-07
-상태: 설계 기준 초안 / 로컬 논의용 (`Docs/`는 Git ignore)
+수정일: 2026-09-11
+상태: Core 경계와 레거시 교체 원칙의 Source of Truth
 
 ## Source of Truth
 
@@ -19,9 +20,10 @@ Unity 6이다.
 - 연구는 Player 스킬 트리, Weapon/Turret, Control Unit의 세 카테고리로 구성한다.
 - 스테이지 실패도 재화를 낮은 비율로 지급한다.
 - 싱글, 재화 미니게임, 협동은 하나의 계정 성장/Profile을 공유한다.
-- 온라인 싱글, 2인 협동(친구 초대 + 랜덤 매칭), 장래 PvP를 고려한다.
+- 싱글 Core를 먼저 검증하고 Steam 친구 초대 기반 2인 협동을 다음 단계로 확장한다.
+- 랜덤 매칭, SOS, 채팅, Ping은 Co-op MVP 이후 Online 확장 범위다.
 - 협동 참가자 이탈은 재접속 유예 후 Ally AI가 슬롯을 대체한다.
-- Host 이탈 뒤에도 매치는 재개되어야 하며, Host Migration은 설계 대상이다.
+- Host Migration에 필요한 Snapshot/Authority 계약은 고려하되 실제 기능은 Deferred다. M4에서 PoC 후 출시 포함 여부를 다시 결정한다.
 - 채팅, 미니맵 Ping, 구조 요청(SOS) 난입을 장래 온라인 기능으로 고려한다.
 - PvP는 Deferred이며, 현재 방향은 PvE 성장 스펙을 활용하는 것이다.
 
@@ -106,7 +108,7 @@ Only AppBootstrap may create the App root. Gameplay code must not query an
 | MatchConfig and loadout snapshot creation | Story/Dungeon/Coop/PvP ModeRules |
 | reward receipt contract | reward validation policy |
 | UI Presenter contracts | local UI layout and mode-specific panels |
-| player slot and Agent contract | Human input / AllyBot / Enemy AI |
+| player slot and Agent contract | Human input / Ally Player Agent / Enemy AI |
 
 `GameSimulation` is shared. A mode selects an authority adapter and a `ModeRules`
 implementation; it must not fork the whole gameplay codebase.
@@ -121,9 +123,9 @@ Future PvP:           DedicatedServerAuthority -> GameSimulation
 
 ### Content definition (versioned, immutable per match)
 
-- `StageDefinition`, `WaveDefinition`, `RegionDefinition`, `WeatherDefinition`
+- `StageDefinition`, `WaveDefinition`, `SectorDefinition`, `WeatherDefinition`
 - `PlayerSkillDefinition`, `WeaponDefinition`, `TurretDefinition`, `ControlUnitDefinition`
-- `EnemyArchetype`, `EnemyDifficultyProfile`, `AllyBotProfile`
+- `EnemyArchetype`, `EnemyDifficultyProfile`, `AllyPlayerAgentProfile`
 - `RewardTable`, `ModeRulesDefinition`
 
 ScriptableObject is appropriate for authoring. At match start, definitions are resolved
@@ -153,8 +155,8 @@ AI creates Commands; it does not bypass game rules.
 
 ```text
 HumanPlayerAgent  ┐
-AllyBotAgent      ├─> Command -> GameSimulation -> MatchState
-EnemyBrain        ┘
+AllyPlayerAgent   ├─> Command -> GameSimulation -> MatchState
+EnemyAgent        ┘
 ```
 
 Difficulty must be data-driven through profiles and encounter definitions, not duplicate
@@ -171,9 +173,9 @@ per-scene scripts. Runtime difficulty adjustments belong to `MatchConfig`/`ModeR
 - `IReconnectService`: player identity/slot reservation, reconnect token, AI takeover.
 - `IMatchMigrationService`: snapshot publication, authority election, new-host restore.
 
-Host migration is an explicit product capability. It requires testable MatchSnapshot
-serialization and an authority handoff protocol; neither Relay nor a lobby alone
-migrates gameplay state.
+Host Migration PoC는 testable `MatchSnapshot` serialization과 authority handoff protocol을
+검증한다. Relay나 Lobby만으로 gameplay state가 이전되지는 않는다. PoC 성공은 실제 기능의
+자동 승인이 아니며 `PROJECT_PLAN.md` Decision Log에서 별도로 범위를 결정한다.
 
 ## Refactoring guardrails
 
@@ -190,14 +192,12 @@ migrates gameplay state.
 - Every network-relevant state mutation is represented as a command/result, not direct UI
   or MonoBehaviour mutation.
 
-## First architecture slices (not a schedule)
+## Architecture slices
 
-1. App/Profile/Content boundaries: Steam identity facade, profile cache contract,
-   Content definitions; no backend or networking SDK coupling inside gameplay.
-2. Single MatchSession: wave, player/CU HP, reward receipt, state-to-HUD presentation.
-3. Agent and difficulty data: Human/AI command sources, enemy/bot difficulty profiles.
-4. Coop adapter: lobby, player slots, replicated MatchState, reconnect/Ally AI fallback.
-5. Migration proof of concept: two clients, host loss, snapshot restore, continued wave.
+1. M1 — App/Profile/Content boundary와 Single `MatchSession` Architecture Slice
+2. M1 — Human/Enemy Command source와 difficulty Definition
+3. M2 — Planet/Hub를 New Core에 연결하는 Single-player Product Vertical Slice
+4. M3 — Lobby, player slot, replicated state, reconnect/Ally AI의 Co-op adapter
+5. M4 — 두 Client의 host loss, snapshot restore, authority handoff PoC
 
-The migration proof of concept is a release gate for the host-migration promise, not a
-detail to add after gameplay completion.
+정확한 Milestone·Priority·Exit Criteria는 `milestones-and-core-design.md`를 따른다.
