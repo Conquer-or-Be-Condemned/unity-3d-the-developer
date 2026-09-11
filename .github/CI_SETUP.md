@@ -12,12 +12,77 @@
 - `Force Text`와 `Visible Meta Files` 설정
 - 활성화된 Build Scene과 Scene `.meta`
 - `Assets` 아래 모든 파일·폴더의 `.meta` 쌍
-- 대상 Asset이 없는 고아 `.meta`
+- 대상 파일이 없는 고아 `.meta` (단, `folderAsset: yes`인 빈 폴더 메타는 허용)
+- `.gitmodules` 연결이 누락된 중첩 저장소 / 잘못된 submodule
 - Git에 들어가면 안 되는 `Library`, `Temp`, `Logs`, `obj`, `.vs`, `.idea`, `UserSettings`
 - 해결되지 않은 Merge conflict 표시
 - 50MB 초과 Asset 경고
 
 Branch rule의 Required status check에는 우선 `Repository checks`만 지정한다. 이 검사는 Unity License가 없어도 항상 실행된다.
+
+## CI 실패를 Discord로 알리기
+
+`PR CI`의 `Repository checks` 또는 선택 Unity 검사가 실패하면 `Discord failure notification` Job이 실행된다. 메시지에는 저장소, Workflow, 이벤트, 브랜치, 짧은 Commit SHA, 실행자, 각 검사 결과와 Actions 실행 링크가 포함된다. 성공·취소·단순 skip에는 알리지 않으며 Discord 전송 실패가 기존 CI 결과를 바꾸지는 않는다.
+
+### 1. Discord Webhook 만들기
+
+1. GitHub 알림용 Discord 채널에서 `채널 편집 → 연동 → 웹후크`로 이동한다.
+2. 새 Webhook을 만들고 해당 채널을 선택한다.
+3. **Webhook URL 복사**를 누른다.
+
+Webhook URL은 메시지를 보낼 수 있는 비밀 값이다. 채팅, Issue, PR, Workflow YAML에 직접 붙이지 않는다. 노출됐다면 Discord에서 즉시 삭제하고 새로 만든다.
+
+### 2. GitHub Secret 등록
+
+저장소 `Settings → Secrets and variables → Actions → New repository secret`에서 다음 값을 등록한다.
+
+| 이름 | 값 |
+|---|---|
+| `DISCORD_WEBHOOK_URL` | Discord에서 복사한 Webhook URL |
+
+Secret이 없거나 fork에서 온 PR이라 Secret을 사용할 수 없으면 알림 단계는 경고만 남기고 건너뛴다. 저장소 내부 팀 브랜치의 push/PR에는 등록된 Secret을 사용할 수 있다.
+
+### 3. 확인
+
+이 Workflow가 포함된 브랜치를 push한 뒤 실제 CI 실패가 발생하면 Discord 채널에 `PR CI 실패` 메시지가 올라온다. Webhook URL 자체를 출력하거나 테스트 메시지에 붙여 넣지 않는다.
+
+Discord Webhook 공식 문서: https://docs.discord.com/developers/resources/webhook
+
+## 빈 폴더 .meta가 CI에서만 실패했던 이유
+
+Git은 빈 폴더를 저장하지 않는다. 로컬의 빈 TextMesh Pro 폴더는 원격 checkout에서 사라져도 폴더의 `.meta`는 남는다. 따라서 파일 존재 여부만 검사하면 정상적인 폴더 메타를 고아 Asset으로 오판한다.
+
+`.github/scripts/validate_meta.py`는 `folderAsset: yes`인 폴더 메타를 허용한다. 일반 Asset 파일 누락, `.meta` 누락, 부모 폴더 메타 누락, 파일/폴더 종류 불일치는 계속 실패한다. Asset이나 GUID를 삭제하거나 새로 생성할 필요가 없다.
+
+로컬에서도 동일한 검사를 실행할 수 있다 (Python 3 필요).
+
+```sh
+python -B -m unittest discover -s .github/scripts -p 'test_*.py' -v
+python -B .github/scripts/validate_meta.py
+```
+
+## CI가 실패해도 push가 되는 이유와 main 보호
+
+Actions는 push/PR 이벤트를 받은 **뒤에** 실행된다. 작업 브랜치에 push하는 것과 `main`에 반영하는 것은 다르다. 작업 브랜치 push는 허용하고, CI가 실패한 변경의 `main` 반영을 차단한다.
+
+2026-09-11 확인 시 원격 `main`은 보호되지 않았고 활성 Ruleset도 없었다. 아래 설정은 권장 구성으로, 이 문서를 수정한다고 GitHub 설정까지 자동 적용되지는 않는다.
+
+1. 저장소 `Settings → Rules → Rulesets → New ruleset → New branch ruleset`.
+2. 이름: `main-ci-required`. Enforcement status: **Active**.
+3. Target branches: `main`만 지정. Bypass list는 비워 관리자도 우회하지 않도록 한다.
+4. **Require a pull request before merging** 켜기.
+5. **Required approvals: 0**. 팀원의 Approve와 댓글 해결을 일괄 필수로 강제하지 않는다.
+6. **Require status checks to pass** 켜기 → `Repository checks` 추가 (GitHub Actions에서 제공하는 검사).
+7. **Require branches to be up to date before merging** 켜기.
+8. **Block force pushes**, **Restrict deletions** 켜기. 저장한다.
+
+수정된 CI를 한 번 실행한 뒤 정확한 check 이름을 선택한다. `UNITY_CI_ENABLED`가 꺼져 있다면 선택 Unity Job을 필수 검사로 지정하지 않는다. Unity Job을 켜고 검증을 마친 뒤 필수 검사에 추가하며, 조건에 의해 skip된 Job은 실제 Unity 검증 통과를 뜻하지 않는다.
+
+사용 흐름: `작업 브랜치 push → PR → Repository checks 성공 → Merge`. 실패하면 해당 작업 브랜치에 수정 commit을 push하여 재검사한다. PR은 필요하지만 사람의 Approve는 필수가 아니다.
+
+로컬 pre-push hook으로 일부 오류를 더 빨리 확인할 수는 있지만, 개발자별 설치가 필요하고 우회할 수 있으므로 서버 Ruleset을 대체할 수 없다.
+
+공식 안내: [보호 브랜치와 필수 상태 검사](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)
 
 ## 실제 Unity Test와 Windows Build 켜기
 
