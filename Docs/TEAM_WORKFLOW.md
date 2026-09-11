@@ -31,41 +31,31 @@ PL이 피해야 할 일:
 
 ### 공통 원칙
 
-실명 대신 `A~E`를 사용하며 A는 PL이다. 역할은 고정 직무 하나가 아니라 `Planet 개발`과 `Spaceship 개발`에서 다르게 배정한다. 각 Task의 주 담당자는 한 명만 두고, A도 기획만 하지 않고 핵심 기능을 직접 구현한다. Build·CI와 `main` 통합은 어느 영역을 개발하더라도 E가 관리한다.
+실명 대신 `A~E`를 사용하며 A는 PL이다. 역할은 고정 직무가 아니라 플레이어에게 전달되는
+**제품 영역(Product Area)** 의 Owner다. 각 Task의 주 담당자는 한 명만 두고, A도 기획만 하지 않고
+Core와 Meta UI를 직접 구현한다. Build·CI·QA·Release는 E 또는 특정 개인의 독점 책임이 아니라,
+각 Feature Owner의 Done 조건이며 통합 Build 확인은 Sprint마다 순환한다.
 
-### Planet 개발 역할
+역할 범위와 AI/온라인의 세부 경계는 [TEAM_ROLE_OWNERSHIP.md](TEAM_ROLE_OWNERSHIP.md)가 유일한
+Source of Truth다. 아래 표는 일상적인 Task 배정에 사용할 요약이다.
 
-| 팀원 | 주 담당 | 직접 구현할 작업 | 지원 및 검토 |
-|---|---|---|---|
-| A | PL, Map/Expansion, Turret·Monster Content | `MapSector`, Planet Level Design, Turret 배치와 Balance, Monster 역할·Stage 배치, Boss 또는 핵심 Turret 1종 | Planet 범위와 Gameplay 최종 승인 |
-| B | Player Combat, Wave, Power HUD | Player 조작·Weapon, Wave 구성과 속도, Power HUD, Combat Feedback | Turret 조합 Balance와 Playtest 진행 |
-| C | Environment와 Level 구성 | Planet Graybox 보조, 지형·Collision, Environment Gimmick, Spawn Point 배치 | Expansion 전후 가독성과 Wave 연출 검토 |
-| D | Enemy AI, Turret/Power System | Shared Turret API, 전력 제어, Targeting, Enemy AI, Laser Integration | Combat Logic과 Monster 성능 개선 |
-| E | Stage Flow와 Integration | Stage 시작·Clear·Fail·Retry, Data 연결, Save, Build·CI, 검증 도구 | `main` 통합과 Release Build |
-
-Planet 역할을 간단히 말하면 `A는 배치와 선택`, `B는 Player와 Wave`, `C는 공간 구성`, `D는 Turret·Monster Code`, `E는 Stage 연결과 Build`를 책임진다.
-
-### Spaceship 개발 역할
-
-| 팀원 | 주 담당 | 직접 구현할 작업 | 지원 및 검토 |
-|---|---|---|---|
-| A | PL, Spaceship Gameplay Design | Spaceship Core Loop, Console 기능 우선순위, Mission 준비 규칙, 핵심 Console 1종 | Hub가 단순한 걷는 메뉴가 되지 않는지 최종 승인 |
-| B | Growth/Economy, UI/HUD | Upgrade 선택, 보상·자원 흐름, Console UI, Mission 정보 화면 | Player 상호작용 Feedback과 Playtest 진행 |
-| C | Spaceship Interior Level Design | Hub Interior Graybox, 방 배치와 동선, Environment 연출, Console 위치 | 이동 시간과 공간 가독성 검토 |
-| D | Interaction System | Player 상호작용, 공통 Console Interface, Trigger, 입력 처리 | Console 기능 구현 지원과 Code 구조 검토 |
-| E | Meta Flow와 Integration | Mission Select, Launch, Result, Return, Save/Progression, Scene 전환, Build·CI | Planet 결과를 Spaceship 상태에 연결 |
-
-Spaceship 역할을 간단히 말하면 `A는 기능 기획`, `B는 성장과 UI`, `C는 내부 공간`, `D는 상호작용 Code`, `E는 Mission·Save·Scene 연결`을 책임진다.
+| 담당 | 제품 영역 | Planet / 전투 | Spaceship / 허브 | Cross 책임 |
+|---|---|---|---|---|
+| A | Project Lead / Core Systems & UI Architect | Match lifecycle, mode rule, 결과/보상 | Mission·Research·Economy UI 흐름 | Core, 저장/경제, 세션/권한/스냅샷, platform 기반, UI architecture |
+| B | Player, Cooperative UX & Cinematic Director | Player combat, Combat HUD, 튜토리얼, 실시간 연출 | Console 조작 UX, 전환 연출 | 입력/카메라, Invite·SOS·Ping·Chat UX, 컷씬 디렉팅 |
+| C | World, Mission & Agent Experience Designer | Planet/mission/environment, Ally Player Agent | Hub 공간과 다이아제틱 UI 배치 | 월드 콘텐츠 data, Rival Player Agent **(Deferred)** |
+| D | Defense, Progression & Balance Designer | Turret/Power/Defense | 연구·해금·강화 | 전투·경제·성장·AI 난이도 data/balance |
+| E | Enemy, Encounter & AI Platform Engineer | Enemy/Boss AI, Horde Director | AI 공통 실행 기반 | behavior runtime, 감지·경로·타게팅·action executor |
 
 ### Planet과 Spaceship 연결 담당
 
 | 연결 지점 | 주 담당 | 지원 | 완료 판단 |
 |---|---|---|---|
-| Spaceship → Planet Launch | E | A, C | 선택한 Mission으로 정상 진입 |
-| Planet → Result → Spaceship Return | E | A, B | Clear 결과와 보상이 Hub에 반영 |
-| Upgrade → Turret/Power 적용 | B | D, E | Upgrade 결과가 다음 Planet 전투에서 동작 |
-| Planet Expansion → Mission 정보 갱신 | A | B, E | Navigation Console에 확장률과 다음 목표 표시 |
-| 통합 Build와 Playtest | E | 전체 팀 | 왕복 Flow를 중단 없이 완주 |
+| Spaceship → Planet Launch / Return | A | B, C | Mission/Result/Profile 상태가 정확히 왕복 |
+| Upgrade → Turret/Power 적용 | D | A, B | 연구 결과가 다음 MatchConfig와 전투에 적용 |
+| Planet Expansion → Mission 정보 갱신 | C | A, B | 구역 변화가 월드와 Mission UI에서 일치 |
+| 유저 이탈 → Ally AI 대체/복귀 | C | A, B, E | 권한·표현·Agent 행동이 끊기지 않음 |
+| 통합 Build와 Playtest | Sprint 순환 | 전체 팀 | 왕복 Flow를 중단 없이 완주 |
 
 ### 권장 Code Review 조합
 
