@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: false
@@ -106,33 +106,20 @@ jobs:
 
           exit "$fail"
 
+      - name: Test Unity .meta validator
+        run: python3 -B -m unittest discover -s .github/scripts -p 'test_*.py' -v
+
       - name: Validate all Unity .meta pairs
+        run: python3 -B .github/scripts/validate_meta.py
+
+      - name: Validate submodule mappings
         shell: bash
         run: |
           set -euo pipefail
-          fail=0
-
-          while IFS= read -r -d '' asset; do
-            if [[ ! -f "${asset}.meta" ]]; then
-              echo "::error file=$asset::누락된 .meta 파일: ${asset}.meta"
-              fail=1
-            fi
-          done < <(find Assets -mindepth 1 ! -name '*.meta' -print0)
-
-          while IFS= read -r -d '' meta; do
-            asset="${meta%.meta}"
-            if [[ ! -e "$asset" ]]; then
-              echo "::error file=$meta::대상 Asset이 없는 .meta 파일: $meta"
-              fail=1
-            fi
-          done < <(find Assets -mindepth 1 -name '*.meta' -print0)
-
-          if [[ $fail -ne 0 ]]; then
-            echo "Unity .meta validation failed."
+          if ! git submodule status; then
+            echo "::error::Git submodule 연결이 잘못됐습니다. 중첩 저장소가 실수로 Commit됐는지 확인하세요."
             exit 1
           fi
-
-          echo "All Assets and folders have matching .meta files."
 
       - name: Reject generated folders and merge conflict markers
         shell: bash
@@ -179,7 +166,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
           lfs: true
@@ -257,3 +244,78 @@ jobs:
           path: build/StandaloneWindows64
           if-no-files-found: error
           retention-days: 7
+
+  notify-discord:
+    name: Discord failure notification
+    needs: [repository-checks, unity-validation]
+    if: ${{ always() && (needs.repository-checks.result == 'failure' || needs.unity-validation.result == 'failure') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check Discord webhook
+        id: discord-webhook
+        shell: bash
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [[ -z "$DISCORD_WEBHOOK_URL" ]]; then
+            echo "::warning::DISCORD_WEBHOOK_URL Secret이 없어 Discord 실패 알림을 건너뜁니다."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Send CI failure to Discord
+        if: ${{ steps.discord-webhook.outputs.configured == 'true' }}
+        shell: bash
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          REPOSITORY: ${{ github.repository }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          EVENT_NAME: ${{ github.event_name }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPOSITORY_CHECKS_RESULT: ${{ needs.repository-checks.result }}
+          UNITY_VALIDATION_RESULT: ${{ needs.unity-validation.result }}
+        run: |
+          set -euo pipefail
+          short_sha="${COMMIT_SHA:0:7}"
+          payload=$(jq -n \
+            --arg repository "$REPOSITORY" \
+            --arg workflow "$WORKFLOW_NAME" \
+            --arg event "$EVENT_NAME" \
+            --arg branch "$BRANCH_NAME" \
+            --arg sha "$short_sha" \
+            --arg actor "$ACTOR" \
+            --arg run_url "$RUN_URL" \
+            --arg repository_checks "$REPOSITORY_CHECKS_RESULT" \
+            --arg unity_validation "$UNITY_VALIDATION_RESULT" \
+            '{
+              username: "The Developer CI",
+              allowed_mentions: {parse: []},
+              embeds: [{
+                title: "❌ PR CI 실패",
+                url: $run_url,
+                color: 15158332,
+                description: ("**" + $repository + "**에서 CI 오류가 발생했습니다."),
+                fields: [
+                  {name: "Workflow", value: $workflow, inline: true},
+                  {name: "Event", value: $event, inline: true},
+                  {name: "Branch", value: $branch, inline: true},
+                  {name: "Commit", value: $sha, inline: true},
+                  {name: "실행자", value: $actor, inline: true},
+                  {name: "검사 결과", value: ("Repository: " + $repository_checks + "\nUnity: " + $unity_validation), inline: false}
+                ],
+                footer: {text: "실행 결과를 열어 Annotations와 실패한 Step을 확인하세요."}
+              }]
+            }')
+
+          if ! curl --fail-with-body --silent --show-error --retry 2 \
+            -H 'Content-Type: application/json' \
+            -d "$payload" \
+            "$DISCORD_WEBHOOK_URL"; then
+            echo "::warning::Discord 실패 알림 전송에 실패했습니다. 기존 CI 결과는 변경하지 않습니다."
+          fi
