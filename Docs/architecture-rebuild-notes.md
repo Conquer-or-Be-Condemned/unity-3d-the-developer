@@ -1,7 +1,8 @@
 # Legacy Baseline and Target Architecture
 
 작성일: 2026-09-07
-상태: 초안 / 로컬 논의용 (`Docs/`는 Git ignore)
+수정일: 2026-09-11
+상태: 레거시 분석·이식 대응 참고 자료
 
 ## 목적
 
@@ -14,8 +15,8 @@ Unity 6 및 Steam 출시를 목표로, 기존 동작을 한 번에 재작성하�
 
 이 문서는 레거시를 재사용의 기반이 아니라 **행동·수치·연출의 레퍼런스**로 기록한다.
 목표 아키텍처는 `Domain / Application / Infrastructure / Presentation / Bootstrap`의
-가벼운 Clean Architecture 용어를 사용한다. 명명 규칙은
-`naming-and-architecture-conventions.md`를 따른다.
+가벼운 Clean Architecture 용어를 사용한다. 이 문서는 Milestone이나 최종 이름을 결정하지 않는다.
+명명은 `naming-and-architecture-conventions.md`, 순서는 `milestones-and-core-design.md`를 따른다.
 
 ## 현재 구조와 의존성
 
@@ -217,11 +218,11 @@ Singleton을 전부 즉시 삭제할 필요는 없다. 새 코드에서 `X.Insta
 
 ```text
 AppRoot (프로세스당 1개; composition root)
-  ├─ AppServices: 설정, 저장, 오디오, 씬 전환
+  ├─ AppServices: Platform, Profile, Content, SceneFlow, MatchFactory
   └─ MatchSession (스테이지/던전/협동 매치마다 1개)
-       ├─ RunState
+       ├─ MatchState
        ├─ WaveService / RewardService / PauseService
-       ├─ IEventBus
+       ├─ IMatchEvents
        └─ scene adapters: PlayerPresenter, HudPresenter, SpawnerAdapter
 ```
 
@@ -234,11 +235,11 @@ AppRoot (프로세스당 1개; composition root)
 | 스코프 | 생성/파기 | 예시 | 테스트 방식 |
 | --- | --- | --- | --- |
 | App | 앱 시작~종료 | 저장, 설정, 오디오, SceneLoader | 순수 C# 서비스 + Fake 구현 |
-| MatchSession | 스테이지/던전/협동 매치 진입~이탈 | RunState, 웨이브, 보상, 승패 | 순수 C# 단위 테스트 |
+| MatchSession | 스테이지/던전/협동 매치 진입~이탈 | MatchState, 웨이브, 보상, 승패 | 순수 C# 단위 테스트 |
 | Scene | 현재 씬 | Player 입력/물리, 스포너, HUD | PlayMode 씬 테스트 |
 | View | UI 표시 중 | 팝업, 툴팁, 체력바 | Presenter 단위/PlayMode 테스트 |
 
-`DontDestroyOnLoad`는 App 스코프의 `AppRoot` 하나에만 허용한다. StageSession과
+`DontDestroyOnLoad`는 App 스코프의 `AppRoot` 하나에만 허용한다. MatchSession과
 씬 오브젝트는 반드시 씬 이탈 시 폐기한다.
 
 ## 레거시 → 목표 대응표
@@ -249,13 +250,13 @@ AppRoot (프로세스당 1개; composition root)
 | `GlobalServices` | `AppServices` | 서비스 집합은 Bootstrap 내부에서만 사용한다. 게임플레이의 전역 조회를 금지한다. |
 | `GameManager` | `AppState`, `PlayerProfile`, `MatchState` | static 플래그/진행도/런타임 상태를 수명주기별 모델로 분해한다. |
 | `SceneController` | `SceneFlowController` | 씬 전환만 담당. 웨이브/보상/게임 규칙을 호출하지 않는다. |
-| `DataManager` | `ContentCatalog`, `PlayerProfile`, `ProfileRepository` | 밸런스 정의, 계정 진행도, 저장을 분리한다. |
+| `DataManager` | `ContentCatalog`, `PlayerProfile`, `ProfileService` | 밸런스 정의, 계정 진행도, Backend Gateway와 Local Cache를 분리한다. |
 | `InGameManager` | `MatchSession`, `GameSimulation`, `StoryModeRules` | 웨이브·승패·보상을 Domain/Application으로 이식한다. UI/Animator는 Presenter로 이동한다. |
 | `PlayerInfo` | `PlayerState` + `PlayerSceneAdapter` | HP 원본은 State, MonoBehaviour는 피격/표현 Adapter가 된다. |
 | `ControlUnitStatus` | `ControlUnitState` + `ControlUnitSceneAdapter` | HP/전력 원본을 State로 이동한다. |
 | `UIPlayerHp`, `UICUInfo` | `HudPresenter` + View | State/event 구독으로 갱신하고 Player/Manager 검색을 제거한다. |
 | `MonsterSpawner`, `Monster` | `SpawnerSceneAdapter`, `MonsterSceneAdapter` | spawn/death를 `GameCommand`/result로 보고한다. |
-| `TowerManager` | `TowerSystem` + `TowerSceneAdapter` | 설치/전력 규칙은 System, 선택 메뉴/프리팹은 Presentation으로 분리한다. |
+| `TowerManager` | `TowerSystem` + `TowerSceneAdapter` | 미리 배치된 터렛의 활성화/전력 규칙은 System, 선택 메뉴/프리팹은 Presentation으로 분리한다. 플레이어 건설 기능은 포함하지 않는다. |
 | `AudioManager` | `IAudioService` + `UnityAudioAdapter` | Game event를 표현하되, Domain에 직접 참조되지 않는다. |
 
 이 표는 상속 계보가 아니라 **책임의 이식 지도**다. 레거시 클래스를 새 이름으로 바꿔
@@ -277,21 +278,21 @@ public interface ISceneLoader
     void Load(SceneId id);
 }
 
-public interface IRunEvents
+public interface IMatchEvents
 {
     IDisposable Subscribe<T>(Action<T> handler);
     void Publish<T>(T evt);
 }
 ```
 
-`WaveService`는 `IRunEvents`에 `WaveStarted`, `MonsterSpawned`, `MonsterDied`,
-`WaveCompleted`, `RunEnded`를 발행한다. `HudPresenter`, `AudioPresenter`,
+`WaveService`는 `IMatchEvents`에 `WaveStarted`, `MonsterSpawned`, `MonsterDefeated`,
+`WaveCompleted`, `MatchCompleted`를 발행한다. `HudPresenter`, `AudioPresenter`,
 `SpawnerAdapter`가 이를 구독한다. 서비스는 `GameObject`, `TMP_Text`, Animator,
 `GeneralManager`를 알지 못한다.
 
 ## 상태 변경 규칙
 
-- 상태는 `RunState` 같은 모델이 소유한다. public field를 직접 쓰지 않는다.
+- 상태는 `MatchState` 같은 모델이 소유한다. public field를 직접 쓰지 않는다.
 - 상태 변경 메서드는 값이 실제로 바뀔 때만 이벤트를 한 번 발행한다.
 - UI는 상태를 폴링하지 않는다. 예: Player HP는 매 `FixedUpdate` 이벤트 발행 대신
   `ApplyDamage`/`Recover`에서 `PlayerHealthChanged`를 발행한다.
@@ -307,15 +308,15 @@ public interface IRunEvents
 - `GameManager`, `DataManager`의 static 상태를 테스트 시작마다 초기화할 수 있는 임시 리셋 도구를 둔다.
 - `GeneralManager.FixedUpdate`의 반복 Find 의존성을 더 늘리지 않는다.
 
-### 1. StageSession을 실제로 연결
+### 1. M2에서 MatchSession을 레거시 Scene에 연결
 
-- `GlobalBootstrap` 또는 새 AppBootstrap이 `AppRoot` 하나를 생성한다.
+- 새 `AppBootstrap`만 `AppRoot` 하나를 생성한다. `GlobalBootstrap`은 참고 대상으로만 둔다.
 - 씬 로드 이벤트에서 Match 씬이면 `MatchSession`을 생성하고, 이탈 시 `Dispose()` 한다.
 - 기존 `InGameManager`는 당분간 Scene Adapter가 되어 Session을 생성/참조만 한다.
 
 ### 2. HP/CU/웨이브를 첫 vertical slice로 이관
 
-- PlayerInfo와 ControlUnitStatus의 수치를 `RunState` 또는 분리된 상태 모델로 이관한다.
+- PlayerInfo와 ControlUnitStatus의 수치를 `MatchState`의 분리된 상태 모델로 이관한다.
 - UIPlayerHp/UICUInfo는 이벤트를 구독하는 Presenter로 변경한다.
 - MonsterSpawner와 Monster는 직접 `InGameManager.Listen...`을 호출하지 않고
   Spawn/Death 이벤트를 발행한다.
@@ -333,21 +334,22 @@ public interface IRunEvents
 
 - ScriptableObject: 밸런스 정의, StageDefinition, WaveDefinition, 대사/로컬라이즈 키.
 - Profile 데이터: 해금, 코인, 업그레이드, 언어, 옵션, 키 바인딩.
-- `IProfileRepository`를 두어 로컬 JSON 저장에서 Steam Cloud 대응 저장소로 바꿀 수 있게 한다.
+- Backend-authoritative `IProfileService`와 별도의 versioned local binary cache 계약을 둔다.
+- Steam Cloud를 사용하더라도 cache 배포 수단으로 취급하며 Backend 권한 저장소를 대체하지 않는다.
 - 저장 데이터에는 버전 번호와 마이그레이션을 둔다.
 
 ## 테스트 전략
 
 ### 순수 C# EditMode 테스트
 
-Unity 씬 없이 `WaveService`, `RewardService`, `RunState`를 테스트한다.
+Unity 씬 없이 `WaveService`, `RewardService`, `MatchState`를 테스트한다.
 
 ```csharp
 [Test]
 public void FinalWave_WhenAllSpawnedMonstersDie_EndsRun()
 {
     var events = new EventBus();
-    var state = new RunState();
+    var state = new MatchState();
     var wave = new WaveService(state, events, new FakeStageDefinition(...));
 
     wave.Start();
@@ -368,12 +370,14 @@ FakeAudioService, FakeSceneLoader만 배치한다. Main, GeneralManager,
 - 레거시 어댑터에서만 Singleton 접근을 허용한다.
 - 테스트 사이 static reset은 임시 안전장치일 뿐, 설계의 최종 해법은 아니다.
 
-## 다음 논의에서 결정할 것
+## 남은 Migration 질문
 
-1. App 스코프에 남길 서비스의 최소 목록: 저장/설정/오디오/씬 전환 외에 무엇이 필요한가?
-2. StageSession이 MonoBehaviour일지 순수 C# 객체일지: 권장은 순수 C# + 얇은 Bootstrap MonoBehaviour.
-3. 첫 vertical slice의 범위: Player HP, CU HP, Wave 완료를 함께 옮길지 결정한다.
-4. 신규 입력 시스템(Input System)과 UI Toolkit/UGUI의 유지 범위를 정한다.
+아래는 다른 기준 문서에서 아직 결정하지 않은 레거시 이식 세부사항이다.
+
+1. 신규 Input System과 기존 입력의 전환 순서
+2. UI Toolkit과 UGUI의 유지 범위
+3. 기존 Audio/Dialogue를 어떤 M2 Architecture Slice에서 이식할지
+4. 레거시 Scene Adapter를 제거할 정확한 Retirement 조건
 
 ## 현재 코드에서 확인한 주요 위험
 

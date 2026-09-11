@@ -1,257 +1,169 @@
-# The Developer — 전체 개발 흐름
+# Development Flow — 전체 개발 흐름
 
-상태: 사용 중
-관리: PL
-수정일: 2026-09-10
+기준일: 2026-09-11
+상태: 실행 순서 기준
 
-이 문서는 팀의 전체 개발 순서를 정의하는 실행 기준이다. 무엇을 만들지는 `PROJECT_PLAN.md`, 현재 할 일은 `SPRINT_0_BACKLOG.md`, 협업 규칙은 `TEAM_WORKFLOW.md`에서 관리한다.
+이 문서는 [milestones-and-core-design.md](milestones-and-core-design.md)의 M0~M5를 Sprint에서 실행하는 방법을 설명한다. Milestone 이름과 범위를 별도로 재정의하지 않는다.
 
-## 1. 전체 흐름 한 줄 요약
+## 1. 전체 흐름
 
-> 기획 확정 → Graybox → 핵심 Prototype → 통합 Build → Playtest → 통과 판정 → Content 제작 → 완성도 개선 → 출시
+```text
+제품 결정
+→ M0 Baseline·Backlog 준비
+→ M1 New Core Architecture Slice
+→ M2 Single-player Product Vertical Slice
+→ M3 2-player Co-op MVP
+→ M4 Online Expansion·Content Alpha
+→ M5 Beta·Release
+```
+
+각 Milestone 내부 흐름은 같다.
 
 ```mermaid
 flowchart LR
-    A[아이디어 / 문제] --> B[기획과 범위]
-    B --> C{착수 조건 충족?}
-    C -- 미충족 --> B
-    C -- 충족 --> D[Sprint Backlog]
-    D --> E[Graybox / Prototype]
-    E --> F[구현]
-    F --> G[PR · 검토 · CI]
-    G --> H[통합 Build]
-    H --> I[Playtest]
-    I --> J{통과 기준 충족?}
-    J -- 실패 --> K[수정 · 단순화 · 보류]
-    K --> D
-    J -- 통과 --> L[다음 기능 또는 Milestone]
+    A[Exit Criteria 확인] --> B[P0 Ready]
+    B --> C[P0 구현·검증]
+    C --> D{P0 Gate 통과?}
+    D -- 아니오 --> C
+    D -- 예 --> E[P1 Playable 결과]
+    E --> F[통합 Build·Playtest]
+    F --> G{Milestone 통과?}
+    G -- 아니오 --> H[수정·축소·보류]
+    H --> B
+    G -- 예 --> I[P2 선택 또는 다음 Milestone]
 ```
 
-핵심 원칙은 `완성품을 오래 만든 뒤 처음 합치는 방식`이 아니라, 작은 실행 가능 Build를 빠르게 만들고 검증 결과에 따라 다음 작업을 결정하는 것이다.
+## 2. Milestone 요약
 
-## 2. 문서별 책임
+| 단계 | 먼저 증명할 것 | Playable 결과 | 다음 단계로 가는 증거 |
+| --- | --- | --- | --- |
+| M0 | 팀 기준·CI·Backlog가 실행 가능한가 | 안정적인 Baseline | P0 완료, 역할/범위 승인 |
+| M1 | 레거시 없이 Core 계약이 작동하는가 | Minimal Test Scene | EditMode/Scene Test와 Core Gate |
+| M2 | 게임의 고유한 재미가 있는가 | 15~20분 Single Vertical Slice | 외부 Playtest 지표 |
+| M3 | 같은 규칙으로 2인이 안정적으로 하는가 | Invite 기반 Co-op | 2 Client 반복 완주·일관성 |
+| M4 | Content·Online·Backend를 반복 운영할 수 있는가 | Alpha | 전체 Flow·복구·Pipeline 검증 |
+| M5 | 출시해도 되는가 | Release Candidate | Clean Install·QA·License·운영 검증 |
 
-| 질문 | 확인할 문서 | 갱신 책임 |
-|---|---|---|
-| 우리 게임은 무엇인가? | `PROJECT_PLAN.md` | PL |
-| 지금 어느 Milestone이고 다음 통과 기준은 무엇인가? | `DEVELOPMENT_FLOW.md`와 `PROJECT_PLAN.md` | PL |
-| 이번 Sprint에 무엇을 끝내는가? | 현재 Sprint Backlog | PL + 기능 담당자 |
-| 구현과 Merge는 어떤 규칙으로 하는가? | `TEAM_WORKFLOW.md` | 통합 담당자 |
-| 새 아이디어를 지금 넣어도 되는가? | Product Backlog와 Decision Log | PL 승인 |
-
-회의 내용, 채팅, 개인 메모는 결정의 근거일 수 있지만 공식 기준은 아니다. 승인된 결정은 반드시 위 문서 중 한 곳에 반영한다.
-
-## 3. 전체 개발 단계
-
-| 순서 | 예상 기간 | 목표 | 통과 증거 | 통과 전 금지 |
-|---|---:|---|---|---|
-| Sprint 0 / M0 | 1주 | 프로젝트 안정화와 기획 확정 | Build·CI 성공, Map/Hub Graybox 승인, 역할표와 범위 승인 | 새 Planet, Final Art, Online |
-| Sprint 1 / M1 | 2주 | 10분 핵심 Prototype | Hub → Planet → 전투 → 귀환을 5회 연속 완주 | Content 대량 생산 |
-| M2 / 2~3 Sprints | 4~6주 | Planet 1 Vertical Slice | 외부 Playtest와 품질 기준 통과 | Planet 2 착수 |
-| M3 / 1 Sprint | 2주 | 반복 제작 구조 확립 | Code 수정 없이 새 Graybox Planet 제작 가능 | 반복적인 수작업 Content 제작 |
-| M4 Alpha | 범위 승인 후 | 예정 Content 전체 실행 가능 | 처음부터 끝까지 완주 가능 | 새 핵심 기능 |
-| M5 Beta | 3~4주 | Balance, UX, 성능, Bug 수정 | Crash·Major Bug 0 | 기능 추가 |
-| M6 출시 후보 Build | 1~2주 | 배포 가능한 Final Build | 새 설치, Save, License 검증 | 검증 없는 변경 |
-
-Sprint 0만 프로젝트 정비를 위한 `1주 예외 Sprint`다. Sprint 1부터는 기본적으로 2주 단위를 사용한다. 날짜가 지나도 통과 기준(Exit Criteria)을 충족하지 못하면 다음 Milestone으로 넘어가지 않는다.
-
-## 4. 현재 작업의 선행 관계
-
-역할은 개발 영역에 따라 나눈다. Planet에서는 `A: Map·Content`, `B: Player·Wave·HUD`, `C: Environment`, `D: Enemy AI·Turret/Power`, `E: Stage 연결·Build`를 맡는다. Spaceship에서는 `A: Gameplay 기획`, `B: Growth·UI`, `C: Interior`, `D: Interaction`, `E: Mission·Save·Scene 연결`을 맡는다. 자세한 표와 Code Review 조합은 `TEAM_WORKFLOW.md`를 따른다.
+## 3. 역할 간 선행 관계
 
 ```mermaid
 flowchart TD
-    BASE[Build · CI · Meta 안정화 — E] --> CORE[왕복 Core Loop 뼈대 — A·E]
-
-    subgraph PLANET[Planet 개발]
-        PMAP[Map · Expansion — A·C]
-        PTUR[Turret · Power — A·D]
-        PENM[Monster · Wave — A·B·D]
-        PPLAY[Player · Power HUD — B]
-    end
-
-    subgraph SHIP[Spaceship 개발]
-        SDESIGN[Gameplay · Console 기획 — A]
-        SSPACE[Interior Graybox — C]
-        SINTERACT[Console Interaction — D]
-        SMETA[Growth · UI · Save — B·E]
-    end
-
-    CORE --> PMAP
-    CORE --> PTUR
-    CORE --> PENM
-    CORE --> PPLAY
-    CORE --> SDESIGN
-    CORE --> SSPACE
-    CORE --> SINTERACT
-    CORE --> SMETA
-
-    PMAP --> BUILD[통합 10분 Build — E]
-    PTUR --> BUILD
-    PENM --> BUILD
-    PPLAY --> BUILD
-    SDESIGN --> BUILD
-    SSPACE --> BUILD
-    SINTERACT --> BUILD
-    SMETA --> BUILD
-    BUILD --> TEST[내부 Playtest — 전체 팀]
-    TEST --> RESULT[수정 또는 M1 통과 — A]
+    A[A · Core 계약/통합] --> B[B · Player/UX Adapter]
+    A --> C[C · World/Mission Data]
+    A --> D[D · Defense/Balance Data]
+    A --> E[E · Enemy/AI Adapter]
+    C --> E
+    D --> E
+    B --> BUILD[통합 Build]
+    C --> BUILD
+    D --> BUILD
+    E --> BUILD
+    A --> BUILD
+    BUILD --> TEST[전체 팀 Playtest]
+    TEST --> GATE[A + Feature Owners Gate 판정]
 ```
 
-각 분야는 병렬로 진행하되 서로 주고받을 값과 연결 방식부터 합의한다.
+- A는 공용 계약과 통합 지점을 먼저 제공하되 Feature를 대신 구현하지 않는다.
+- B/C/D/E는 계약이 완벽해질 때까지 기다리지 않고 Fake/Interface로 최소 Slice를 병렬 검증한다.
+- C/D가 미정이면 임시 Owner를 지정하거나 관련 Task를 `Blocked`로 둔다.
+- Feature끼리 직접 참조를 늘리지 않고 Definition, Command, Event, Adapter로 연결한다.
 
-- Planet Map: Sector ID, 개방 상태, Spawn Point, Turret Slot
-- Planet 전투: Turret 활성화와 Power, Monster 역할과 Wave, Player 전투
-- Spaceship 공간: 방 배치, 이동 동선, Console 위치
-- Spaceship 기능: Mission 선택, Growth, 출격, 결과, 귀환, Save
-- UI: 각 System의 상태를 보여주되 Gameplay Rule 자체는 담당하지 않음
+## 4. Sprint Planning
 
-기능끼리 직접 참조를 임의로 늘리지 않는다. 필요한 Data와 Event는 기능 담당자와 통합 담당자가 먼저 연결 규칙을 정한다.
+1. 현재 Milestone Exit Criteria와 최신 Build를 확인한다.
+2. 가장 큰 Risk 하나를 Sprint Goal로 변환한다.
+3. 미완료 P0를 먼저 Ready 상태로 만든다.
+4. 팀원별 핵심 Task 1개와 작은 Task 1개 이하를 배정한다.
+5. 예상 시간 합계는 실제 가용 시간의 70%를 넘지 않는다.
+6. C/D Task는 실명 Owner 또는 임시 Owner가 있는지 확인한다.
+7. Test Evidence와 통합 날짜를 Task에 적는다.
 
-## 5. Sprint 운영 순서
+## 5. 구현과 통합
 
-### A. Backlog 정리 — Sprint 계획 전
+### 5.1 작은 Slice
 
-PL과 기능 담당자가 Sprint 후보 Task를 준비한다.
-
-- 해결할 Player 문제와 기대 효과
-- 포함 범위 / 제외 범위
-- 담당자, 예상 시간, 선행 작업
-- 완료 조건과 확인 방법
-- 영향받는 Scene, Prefab, Code Module
-
-위 항목이 없으면 `Ready`가 아니며 Sprint에 넣지 않는다.
-
-### B. Sprint 계획 — 첫날
-
-1. 최신 통합 Build를 직접 실행한다.
-2. 현재 Milestone의 가장 큰 위험 요소 한 가지를 고른다.
-3. Sprint Goal을 한 문장으로 정한다.
-4. Goal에 직접 연결된 Task만 선택한다.
-5. 각 팀원은 동시에 최대 1개의 주 Task와 1개의 작은 Task만 맡는다.
-6. 개인 가용 시간의 70%만 계획하고 나머지는 통합과 Bug 수정에 남긴다.
-
-### C. 구현 — Sprint 전반
-
-1. Feature Branch 생성
-2. 가장 작은 Graybox 또는 Test Case로 동작 증명
-3. 핵심 Logic 구현
-4. 다른 기능과 연결하기 전에 Local Test
-5. 하루 이상 막히면 `Blocked`로 표시하고 도움 요청
-6. 완성될 때까지 기다리지 말고 작은 단위로 PR 생성
-
-### D. 중간 통합 — Sprint 중간점
-
-- 완료된 기능을 `main`에 합친다.
-- Scene 흐름과 Core Loop를 직접 실행한다.
-- 선행 작업 변경과 충돌을 확인한다.
-- Goal과 관계없는 작업은 Product Backlog로 돌린다.
-- 남은 작업 시간으로 Sprint 목표를 달성할 수 없으면 범위를 줄인다.
-
-### E. Build 검토와 Playtest — 주 1회
-
-1. 개인 Editor 화면이 아니라 동일한 통합 Build를 사용한다.
-2. 자신이 만들지 않은 기능을 최소 한 명이 Test한다.
-3. Bug는 재현 순서, 기대 결과, 심각도를 기록한다.
-4. Playtest 질문으로 이해도와 선택 변화를 확인한다.
-5. 다음 Build에서 반드시 고칠 최대 세 가지를 정한다.
-
-### F. Sprint 검토와 회고 — 마지막 날
-
-- `Done`은 시연 여부가 아니라 Task의 완료 조건과 팀의 공통 완료 기준으로 판정한다.
-- 미완료 Task는 자동 연장하지 않고 원인을 확인한 뒤 재계획한다.
-- Sprint 목표 달성 여부와 Milestone 통과 기준의 변화를 기록한다.
-- 작업 방식의 문제 한 가지와 다음 Sprint에서 바꿀 행동 한 가지만 정한다.
-
-## 6. Task 상태 흐름
-
-| 상태 | 의미 | 다음 상태로 가는 조건 |
-|---|---|---|
-| Idea | 아직 검토하지 않은 제안 | 해결할 문제와 효과 기록 |
-| Backlog | 언젠가 할 수 있으나 현재 약속하지 않은 일 | 우선순위와 Milestone 연결 |
-| Ready | 구현에 필요한 정보가 준비된 일 | Sprint 계획에서 선택 |
-| In Progress | 담당자가 작업 중 | Local Test와 스스로 검토 완료 |
-| Review | PR 검토 중 | 검토 승인과 CI 성공 |
-| Integrated | `main`에서 다른 기능과 함께 동작 | 통합 Build Test 성공 |
-| Verify | Playtest 또는 완료 조건 확인 중 | 조건 충족 |
-| Done | 검증까지 완료 | 없음 |
-| Blocked | 외부 결정이나 선행 작업 때문에 진행 불가 | 해결 담당자와 예정 시점 지정 |
-
-`코드를 작성함`, `내 PC에서 한 번 동작함`, `PR을 올림`은 Done이 아니다.
-
-## 7. 기능 하나를 만드는 표준 순서
-
-예: Laser Turret을 추가하는 경우
-
-1. **기능 정의** — 역할, Power Cost, 강점, 약점, 대응 Monster 정의
-2. **연결 규칙 합의** — Shared Turret API와 필요한 Data/Event 결정
-3. **Graybox** — 임시 Visual로 Targeting, Damage, 활성화 검증
-4. **구현** — Gameplay Code와 Data 연결
-5. **Local Test** — ON/OFF, Power 반환, Wave 종료, Scene 재시작 확인
-6. **PR & CI** — Code Review, `.meta`, 깨진 참조, Build 확인
-7. **통합** — HUD, Minimap, Monster/Wave, Save와 함께 Test
-8. **Playtest** — 실제로 다른 Turret 조합을 선택하게 만드는지 확인
-9. **판정** — 완료 조건을 통과하면 Done, 아니면 수정·단순화·보류 중 하나 결정
-10. **마무리** — Core Fun이 확인된 뒤 Final Art, VFX, SFX 적용
-
-모든 기능은 이 순서를 따른다. Final Art와 대량 Content는 Graybox Playtest를 통과한 기능에만 투자한다.
-
-## 8. Branch에서 Done까지
+한 Slice는 가능한 한 아래 흐름을 끝까지 포함한다.
 
 ```text
-Ready Task 선택
-→ feature/fix/content Branch 생성
-→ 작은 단위 구현과 Local Test
-→ PR 작성: 목적 · 확인 방법 · 영향 Scene
-→ CI 성공
-→ 다른 팀원 검토
-→ main Merge
-→ 통합 Build 실행
-→ 기존 기능 재검사 / Playtest
-→ 완료 조건 확인
+Definition/Config
+→ Domain rule
+→ Command/Event
+→ Unity Adapter/Presenter
+→ Test Scene 또는 통합 Scene
+→ 자동/수동 Test Evidence
+```
+
+Domain만 대량 작성하거나 Scene만 먼저 완성하는 방식은 피한다.
+
+### 5.2 중간 통합
+
+- Sprint 중간에 완료된 P0/P1을 `main`에 합친다.
+- 같은 Build에서 Feature 간 상태·Scene·Save 연결을 확인한다.
+- Goal과 무관한 작업은 P3 Backlog로 이동한다.
+- 남은 시간으로 Exit Criteria를 달성할 수 없으면 범위를 줄인다.
+
+### 5.3 PR과 Review
+
+```text
+Ready
+→ Branch
+→ 구현·Local Test
+→ Self-review
+→ PR + Evidence
+→ CI
+→ 필요 시 관련 Owner Review
+→ Merge
+→ 통합 Build
+→ Verify
 → Done
 ```
 
-Merge 후 문제가 발견되면 원래 Task를 억지로 Done 처리하지 않는다. Bug를 연결하고 심각도에 따라 현재 Sprint에서 수정하거나 Backlog로 보낸다.
+GitHub Required Approval은 0이다. Core/Save/Scene/Build/Network처럼 영향이 큰 변경만 관련 Owner Review를 운영상 요구한다.
 
-## 9. 변경 결정 흐름
+## 6. Playtest와 Gate 판정
 
-새 아이디어나 변경 요청은 다음 순서로 처리한다.
+### 매주
 
-1. 어떤 Player 문제를 해결하는지 기록
-2. 현재 Milestone 목표와 관계가 있는지 판단
-3. 추가할 일과 대신 제거·연기할 일을 함께 제시
-4. Prototype 또는 Playtest로 검증 방법 정의
-5. PL이 `채택 / 시험 / 보류 / 거절` 중 하나로 결정
-6. Core Rule 또는 범위 변경이면 `PROJECT_PLAN.md` Decision Log 갱신
-7. 승인된 경우에만 Backlog Task 생성
+- Release Captain이 동일한 Build와 Test 순서를 준비한다.
+- 각 Owner는 자신이 만들지 않은 기능 하나 이상을 확인한다.
+- Bug는 재현 순서, 기대/실제 결과, Build/Commit을 남긴다.
+- 다음 Build의 Blocker는 최대 3개로 제한한다.
 
-회의에서 반응이 좋았다는 이유만으로 즉시 구현하지 않는다. 현재 Sprint 도중 들어온 P0 문제가 아닌 요청은 기본적으로 다음 Sprint 계획에서 검토한다.
+### Milestone 종료
 
-## 10. 단계별 판정 책임
+- A가 Exit Criteria 증거를 모은다.
+- 각 Feature Owner가 자신의 영역을 통과/미통과로 판정한다.
+- 미통과 항목은 수정, 범위 축소, P3 보류 중 하나로 결정한다.
+- 모든 P0가 통과하고 핵심 Playable 결과가 있어야 다음 Milestone으로 이동한다.
 
-| 판정 대상 | 준비 책임 | 확인 책임 | 최종 결정 |
-|---|---|---|---|
-| Task 착수 가능 | 기능 담당자 | 관련 협업자 | PL |
-| PR Merge | Task 담당자 | 검토자 + CI | E |
-| 기능 완료 | 기능 담당자 | QA 역할의 팀원 | A |
-| Sprint 목표 | 전체 팀 | Build 검토 | A |
-| Milestone 통과 | 기능 담당자들 | 외부/내부 Playtest | A + 팀 합의 |
-| 범위 변경 | 제안자 | 영향받는 담당자 | A |
+## 7. 단계별 역할 초점
 
-담당자는 혼자 만드는 사람이 아니라 끝까지 상태와 품질을 책임지는 사람이다.
+| Milestone | A | B | C | D | E |
+| --- | --- | --- | --- | --- | --- |
+| M0 | 범위·Architecture·CI | Player/HUD 분석 | World/Hub 설계 | Turret/Power 설계 | Enemy/Wave 분석 |
+| M1 | New Core·Profile·Match | Player Adapter·HUD | Definition·Test World | Defense Rule/Data | Enemy/Director 최소 Slice |
+| M2 | 왕복·Meta UI·통합 | Player Combat·Tutorial | Planet/Hub/Expansion | 3 Turret·Power·Growth | 3 Enemy·Boss·Wave |
+| M3 | Steam/Authority/Network | Co-op UX | Ally Agent·Mission | Co-op Balance | Network-safe AI/Encounter |
+| M4 | Backend·운영·Alpha Gate | Online UX·Polish | Content Pipeline | Progression/Balance Pipeline | Encounter Pipeline |
+| M5 | Release·복구·승인 | UX/접근성 QA | Scene/Content QA | Economy/Balance QA | AI/Performance QA |
 
-## 11. 지금 당장 실행할 순서
+Priority별 상세 업무는 Core Design 문서를 사용한다.
 
-1. `PROJECT_PLAN.md`의 Vertical Slice 범위와 미결정 항목을 팀이 검토한다.
-2. Sprint 0 P0 Task의 A~E 주 담당과 지원 배정을 확인한다.
-3. Build·CI·`.meta` 기반 상태를 먼저 정상으로 만든다.
-4. Map, Hub, Turret, Monster의 Paper Design을 병렬로 완성한다.
-5. Power Paper Simulation으로 유효한 Turret 조합 두 개 이상을 확인한다.
-6. Sprint 0 검토에서 M0 통과 기준을 판정한다.
-7. 통과하면 Sprint 1에서 Hub ↔ Planet Core Loop 뼈대를 가장 먼저 연결한다.
-8. Map, Turret, Monster 분야를 병렬 구현하고 Sprint 중간에 처음 통합한다.
-9. 10분 통합 Build를 5회 연속 완주한다.
-10. 내부 Playtest 결과로 M1 통과 또는 재작업을 결정한다.
+## 8. 변경 결정
 
-이 순서 밖의 Online, 추가 Planet, 대형 Spaceship, Final Art 작업은 Product Backlog에만 기록하고 M2 통과 전에는 시작하지 않는다.
+1. 해결할 Player/기술 문제를 기록한다.
+2. 현재 Milestone과 Priority를 판정한다.
+3. 추가 작업과 대신 제거·연기할 작업을 함께 적는다.
+4. Prototype/Test/Playtest 방법을 정한다.
+5. A가 채택·실험·보류·거절을 결정한다.
+6. 제품 범위면 Project Plan, 기술 Gate면 Core Design, 역할이면 Role Ownership을 갱신한다.
+7. 승인 후에만 Backlog Task를 만든다.
+
+## 9. 지금 실행할 순서
+
+1. [SPRINT_0_BACKLOG.md](SPRINT_0_BACKLOG.md)의 M0 P0 Owner와 예상 시간을 확인한다.
+2. C/D의 실제 담당 또는 임시 Owner를 지정한다.
+3. Build·CI·`.meta` Baseline을 정상화한다.
+4. M1의 Core 계약, Player, World, Defense, Enemy Slice를 Ready로 만든다.
+5. M0 Gate를 통과하면 M1에서 Minimal Test Scene을 먼저 연결한다.
+6. M1 통과 전 Hub/Planet 완성 Content와 Online SDK 작업은 시작하지 않는다.
