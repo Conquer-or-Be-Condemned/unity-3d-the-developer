@@ -1,6 +1,6 @@
 # The Developer — Project Documentation
 
-수정일: 2026-09-11
+수정일: 2026-09-12
 상태: 현행 PL 기준 / M0 팀 검토 대상
 
 이 폴더는 Unity 6 기반 `The Developer`의 제품 기획, New Core 아키텍처, 역할, Milestone과 실행 규칙을 보관한다. 레거시 코드는 기능·수치·연출의 참고 자료이며 신규 기능의 기반으로 사용하지 않는다.
@@ -19,11 +19,11 @@
 | --- | --- | --- |
 | A | 양현석 | Project Lead / Core Systems & UI Architecture |
 | B | 이영빈 | Player / Combat·Co-op UX / Cinematic |
-| C | — | World / Mission / Ally Player Agent |
-| D | — | Defense / Progression / Balance |
+| C | 김진태 | World / Mission / Ally Player Agent |
+| D | 황재동 | Defense / Progression / Balance |
 | E | 조수빈 | Enemy / Encounter / AI Platform |
 
-C와 D는 제품 영역 자체는 유지하되 담당자가 확정되기 전까지 착수 작업마다 임시 Owner를 지정한다. A가 자동으로 C/D 업무를 모두 흡수하지 않는다.
+C와 D의 담당은 각각 김진태, 황재동으로 확정됐다. 각 역할은 자신의 제품 영역과 관련 Task의 구현·검증·인수 기준을 끝까지 책임진다.
 
 ## 읽는 순서
 

@@ -1,7 +1,7 @@
 # Team Role Ownership — 5개 제품 영역
 
-기준일: 2026-09-11
-상태: 역할·AI·협업 경계의 현행 기준 / C·D 담당 미정
+기준일: 2026-09-12
+상태: 역할·AI·협업 경계의 현행 기준 / A~E 담당 확정
 
 ## 1. 팀 구성
 
@@ -9,11 +9,11 @@
 | --- | --- | --- | --- |
 | A | 양현석 | Project Lead / Core Systems & UI Architect | 확정 |
 | B | 이영빈 | Player, Cooperative UX & Cinematic Director | 확정 |
-| C | — | World, Mission & Agent Experience Designer | 코드 매핑 미정 |
-| D | — | Defense, Progression & Balance Designer | 코드 매핑 미정 |
+| C | 김진태 | World, Mission & Agent Experience Designer | 확정 |
+| D | 황재동 | Defense, Progression & Balance Designer | 확정 |
 | E | 조수빈 | Enemy, Encounter & AI Platform Engineer | 확정 |
 
-C/D가 미정이어도 제품 영역을 삭제하거나 다른 역할에 자동 합치지 않는다. 해당 영역 작업을 Sprint에 넣으려면 계획 회의에서 임시 Owner와 지원자를 명시한다. 임시 Owner가 없으면 해당 Task는 `Blocked`다.
+C와 D의 역할 매핑은 각각 김진태, 황재동으로 확정됐다. 제품 영역은 다른 역할에 자동 합치지 않으며, 각 Task에는 지원자와 가용 시간을 명시한다.
 
 ## 2. 공통 운영 원칙
 
@@ -62,7 +62,7 @@ C/D가 미정이어도 제품 영역을 삭제하거나 다른 역할에 자동 
 - Match State·Reward·Currency를 직접 변경하지 않고 A의 Command/Use Case를 사용한다.
 - 환경과 공간은 C, Turret/Progression 의미는 D, Enemy/Boss 행동은 E와 협업한다.
 
-### C · World, Mission & Agent Experience Designer
+### C — 김진태 · World, Mission & Agent Experience Designer
 
 **Owner**
 
@@ -79,7 +79,7 @@ C/D가 미정이어도 제품 영역을 삭제하거나 다른 역할에 자동 
 - Ally Agent는 E의 AI runtime과 B의 Player Action 계약을 재사용한다.
 - 전투 수치의 최종 결정은 D의 Profile/Balance를 따른다.
 
-### D · Defense, Progression & Balance Designer
+### D — 황재동 · Defense, Progression & Balance Designer
 
 **Owner**
 
@@ -154,10 +154,10 @@ Milestone별 P0/P1/P2/P3 업무는 [milestones-and-core-design.md](milestones-an
 - M3: A가 Authority/Network, B가 Co-op UX, C가 Ally Agent, D가 Co-op Balance, E가 AI runtime을 맡는다.
 - M4/M5: Feature Owner가 Content·품질을 마감하고 A는 운영·통합·Release Gate를 관리한다.
 
-## 8. C/D 미배정 운영 규칙
+## 8. C/D 확정 이후 운영 규칙
 
-1. M0 P0에서 C/D 담당 확정을 먼저 시도한다.
-2. 확정 전에는 C/D Task마다 `임시 Owner`, `지원`, `종료 시점`을 Issue에 적는다.
-3. 임시 Owner의 동시 핵심 Task는 하나를 넘기지 않는다.
-4. 임시 대행으로 다른 역할의 P0가 밀리면 C/D Task 범위를 줄이거나 Milestone을 연장한다.
-5. A가 PL이라는 이유만으로 미배정 업무를 자동 인수하지 않는다.
+1. C는 김진태, D는 황재동을 기본 Owner로 지정한다.
+2. Sprint Planning에서 두 사람의 실제 가용 시간과 지원자를 확인한다.
+3. 개인별 동시 핵심 Task는 하나를 넘기지 않는다.
+4. 가용 시간이 부족하면 A가 자동 대행하지 않고 Task 범위를 줄이거나 Milestone을 조정한다.
+5. 역할 변경이 필요하면 Decision Log와 Ownership 문서를 같은 PR에서 갱신한다.

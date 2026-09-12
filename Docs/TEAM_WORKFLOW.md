@@ -1,6 +1,6 @@
 # Team Workflow — 팀 협업 규칙
 
-기준일: 2026-09-11
+기준일: 2026-09-12
 상태: Sprint·Git·Review·Ready/Done의 Source of Truth
 
 역할 경계는 [TEAM_ROLE_OWNERSHIP.md](TEAM_ROLE_OWNERSHIP.md), Milestone별 Priority 업무는 [milestones-and-core-design.md](milestones-and-core-design.md)를 따른다.
@@ -14,7 +14,7 @@ A — 양현석은 `Player-Coach` 형태의 PL로, 방향을 결정하면서 Cor
 - Task 착수 전에 범위·선행 작업·완료 조건·검증 방법을 확인한다.
 - Blocker와 역할 간 in-between 문제를 해결하고 필요한 결정을 기록한다.
 - 자신의 Core 변경도 영향 범위가 크면 다른 Owner의 Review를 받는다.
-- C/D 미배정 업무를 자동으로 떠안지 않고 임시 Owner 또는 일정 조정을 결정한다.
+- C 김진태와 D 황재동의 업무를 A가 자동으로 떠안지 않고, 가용 시간에 맞춰 범위 또는 일정을 조정한다.
 - Milestone Exit Criteria 전에는 다음 단계의 Content 대량 제작을 허용하지 않는다.
 
 ## 2. Priority
@@ -66,7 +66,7 @@ Milestone: M2 Single-player Vertical Slice
 3. Sprint Goal을 한 문장으로 정한다.
 4. P0와 Goal에 직접 연결된 P1만 먼저 선택한다.
 5. 각 Task가 Definition of Ready를 충족하는지 확인한다.
-6. C/D Task는 확정 또는 임시 Owner가 없으면 `Blocked`로 둔다.
+6. C/D Task는 각각 김진태·황재동의 가용 시간과 지원자가 기록돼야 `Ready`로 전환한다.
 
 ### 작업일 공유
 
@@ -182,7 +182,7 @@ Core Rule·제품 범위는 `PROJECT_PLAN.md`, Milestone/Exit Criteria는 Core D
 - Sprint Goal이 한 문장인가?
 - 모든 진행 Task가 Ready였는가?
 - 사람별 핵심 Task가 1개 이하인가?
-- C/D Task에 실제 Owner가 있는가?
+- C/D Task에 김진태·황재동의 가용 시간과 지원자가 기록됐는가?
 - `main` 필수 CI와 통합 Build가 정상인가?
 - 막힌 결정이 이틀 넘게 방치되지 않았는가?
 - P3가 몰래 P0/P1 범위에 들어오지 않았는가?
