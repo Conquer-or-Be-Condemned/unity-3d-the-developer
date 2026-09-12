@@ -1,6 +1,6 @@
 # Development Flow — 전체 개발 흐름
 
-기준일: 2026-09-11
+기준일: 2026-09-12
 상태: 실행 순서 기준
 
 이 문서는 [milestones-and-core-design.md](milestones-and-core-design.md)의 M0~M5를 Sprint에서 실행하는 방법을 설명한다. Milestone 이름과 범위를 별도로 재정의하지 않는다.
@@ -49,8 +49,8 @@ flowchart LR
 ```mermaid
 flowchart TD
     A[A · Core 계약/통합] --> B[B · Player/UX Adapter]
-    A --> C[C · World/Mission Data]
-    A --> D[D · Defense/Balance Data]
+    A --> C[C · 김진태 · World/Mission Data]
+    A --> D[D · 황재동 · Defense/Balance Data]
     A --> E[E · Enemy/AI Adapter]
     C --> E
     D --> E
@@ -65,7 +65,7 @@ flowchart TD
 
 - A는 공용 계약과 통합 지점을 먼저 제공하되 Feature를 대신 구현하지 않는다.
 - B/C/D/E는 계약이 완벽해질 때까지 기다리지 않고 Fake/Interface로 최소 Slice를 병렬 검증한다.
-- C/D가 미정이면 임시 Owner를 지정하거나 관련 Task를 `Blocked`로 둔다.
+- C와 D는 각각 김진태, 황재동이 담당하며, 자신의 Slice를 Fake/Interface로 병렬 검증한다.
 - Feature끼리 직접 참조를 늘리지 않고 Definition, Command, Event, Adapter로 연결한다.
 
 ## 4. Sprint Planning
@@ -75,7 +75,7 @@ flowchart TD
 3. 미완료 P0를 먼저 Ready 상태로 만든다.
 4. 팀원별 핵심 Task 1개와 작은 Task 1개 이하를 배정한다.
 5. 예상 시간 합계는 실제 가용 시간의 70%를 넘지 않는다.
-6. C/D Task는 실명 Owner 또는 임시 Owner가 있는지 확인한다.
+6. 모든 Task에 실명 Owner, 지원자와 가용 시간이 있는지 확인한다.
 7. Test Evidence와 통합 날짜를 Task에 적는다.
 
 ## 5. 구현과 통합
@@ -162,7 +162,7 @@ Priority별 상세 업무는 Core Design 문서를 사용한다.
 ## 9. 지금 실행할 순서
 
 1. [SPRINT_0_BACKLOG.md](SPRINT_0_BACKLOG.md)의 M0 P0 Owner와 예상 시간을 확인한다.
-2. C/D의 실제 담당 또는 임시 Owner를 지정한다.
+2. C 김진태와 D 황재동의 가용 시간·첫 P0 착수 가능일을 확인한다.
 3. Build·CI·`.meta` Baseline을 정상화한다.
 4. M1의 Core 계약, Player, World, Defense, Enemy Slice를 Ready로 만든다.
 5. M0 Gate를 통과하면 M1에서 Minimal Test Scene을 먼저 연결한다.
